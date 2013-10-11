@@ -944,7 +944,7 @@ function   ($, _, Backbone) {
                 mods = new ModuleCollection([
                             new Serration(), 
                             new SplitChamber(), 
-                            new SpeedTrigger({currentRank:0}),
+                            new SpeedTrigger(),
                             new PiercingHit(), 
                             new Shred({currentRank:0}), 
                             new FastHands({currentRank:0}), 
@@ -954,7 +954,7 @@ function   ($, _, Backbone) {
                             new Hellfire(), 
                             new CryoRounds(), 
                             new Stormbringer(),
-                            new Wildfire(),
+                            new Wildfire({currentRank:0}),
                             new HammerShot({currentRank:0}),
                             new Bane({currentRank:0}),
                             new CriticalDelay({currentRank:0}),

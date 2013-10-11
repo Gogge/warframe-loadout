@@ -51,7 +51,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
             // Add serration type mods
             baseDamage = baseDamage * (100 + module_types['Damage']) / 100;
-            if(this.get('weaponType') === "rifle"){
+            if((this.get('weaponType') === "rifle") || (this.get('weaponType') === "sniper") || (this.get('weaponType') === "bow")){
                 baseDamage *= (100 + this.get('auras').where({name:"Rifle Amp"})[0].getPercents()["Rifle Damage"]) / 100;
             }
             damage = baseDamage;
@@ -80,7 +80,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
             //Add others
             var fireRate = 1.0;
-            if (this.get('charge') || this.get('continous')){
+            if (this.get('continous')){
                 fireRate = this.get('Fire Rate');
             } else {
                 fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
@@ -1367,7 +1367,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
         new (Lanka = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continous'));
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1452,7 +1452,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (Dread = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continous'));
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1473,7 +1473,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (Miter = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continous'));
+             this.set('modules', Modules.getNewRifleModCollection('elemental'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1494,7 +1494,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (Paris = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continous'));
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1515,7 +1515,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (ParisPrime = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continous'));
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
