@@ -126,7 +126,11 @@
                     <%var percents = module.getPercents();%>
                     <%var types = module.get('types');%>
                     <% for(key in percents){%>
-                        <div><%= key %>: <%= percents[key]%>% (<%=types[key]%>% per point)</div>
+                        <% if(key !== "Puncture"){%>
+                            <div><%= key %>: <%= percents[key]%>% (<%=types[key]%>% per point)</div>
+                        <%} else {%>
+                            <div><%= key %>: <%= percents[key] / 100%> meters (<%=types[key] / 100%> m per point)</div>
+                        <%}%>
                     <%}%>
                 </div>
             </div>

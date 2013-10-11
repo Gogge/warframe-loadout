@@ -1291,7 +1291,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Hek",
             masteryRank:4,
-            damageType:"impact",
+            damageType:"Impact",
             prettyDamageType:"Impact",
             damage : 140, 
             'Fire Rate' : 2.2,
@@ -1339,6 +1339,26 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Reload Speed' : 1.5,
             'Crit Chance' : 0.2,
             'Crit Damage' : 1.8
+           }
+        })),
+        
+        new (Sobek = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewShotgunModCollection('sobek'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"shotgun", 
+            name : "Sobek",
+            masteryRank:4,
+            damageType:"Impact",
+            prettyDamageType:"Impact",
+            damage : 100, 
+            'Fire Rate' : 2.5,
+            'Magazine Capacity' : 20,
+            'Reload Speed' : 4.0,
+            'Crit Chance' : 0.025,
+            'Crit Damage' : 1.5
            }
         })),
 
