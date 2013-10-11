@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Warframe Loadout</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/WarframeLoadout.css">
+        <script data-main="js/WarframeLoadout" src="js/libs/require.js"></script>
+    </head>
+    <body>
+        <div class="links"><div class="cell link"><a href="http://www.warframe.com">Warframe.com</a></div><div class="cell link"><a href="http://www.reddit.com/r/warframe">reddit r/Warframe</a></div></div>
+        <div id="optionsContainer" class="box"></div>
+        <div id="weaponContainer" class="weapon"></div>
+        <script type="text/template" id="weaponTemplate">
+            <%var color_class = ""%>
+            <% if (categoryName === "Favorite") { color_class = "fav" }%>
+            <div class="cell">
+                <div class="weaponHeader">
+                    <span class="name <%=color_class%>"><%= weapon.get("name") %></span>
+                    <span class="dps"><%= result.dps.toFixed(0) %> DPS</span>
+                    <div class="divitis fav <%= (categoryName === "Favorite") ? "rem" : "add" %> noselect"><%= (categoryName === "Favorite") ? "&#9734; Remove" : "&#9733; Add" %> Favorite</div>
+                </div>
+                <div class="mastery">
+                    Mastery rank: <%= weapon.get('masteryRank')%>
+                </div>
+                <div class="cell">
+                    <table class="damage">
+                    <thead>
+                        <tr>
+                            <th>Damage</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <%for(var key in result['damageBreakdown']){%>
+                        <tr>
+                            <td><%= key %></td><td class="right"><%= result['damageBreakdown'][key].toFixed(0)%></td>
+                        </tr>
+                    <%}%>
+                    </tbody>
+                    </table>
+                </div>
+                <div class="cell">
+                    <table class="stats">
+                    <thead>
+                        <tr>
+                            <th>Stats</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <%for(var key in result['stats']){%>
+                        <%var stat_name = key %>
+                        <%var stat_value = result['stats'][key] %>
+                        <%if(stat_name === "Crit Damage") {
+                            stat_value = (stat_value *= 100).toFixed(0) + "%";
+                          } else if(stat_name === "Crit Chance"){
+                            stat_value = (stat_value *= 100).toFixed(2) + "%";
+                          } else {
+                            stat_value = stat_value.toFixed(2);
+                          }%>
+                        <tr>
+                            <td><%= stat_name %></td><td class="right"><%= stat_value%></td>
+                        </tr>
+                    <%}%>
+                    </tbody>
+                    </table>
+                </div>
+                <div class="cell">
+                    <% var ancientDisruptor = new Enemies.AncientDisruptor()%>
+                    <% var grineerNapalm = new Enemies.GrineerNapalm() %>
+                    <% var corpusTech = new Enemies.CorpusTech() %>
+                    <% var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];%>
+                    <table class="scaling">
+                       <thead>
+                            <tr>
+                                <th>Level</th><th>Ancient</th><th>Napalm</th><th>Tech</th>
+                            </tr>
+                            </thead>
+                         <tbody>
+                            <tr>
+                                <td>5</td><td><%= ancientDisruptor.getDamageTaken(result, 5, corrosiveProjection).toFixed(0) %></td><td>-</td><td>-</td>
+                            </tr>
+                            <tr>
+                                <td>10</td><td><%= ancientDisruptor.getDamageTaken(result, 10, corrosiveProjection).toFixed(0) %></td><td><%= grineerNapalm.getDamageTaken(result, 10, corrosiveProjection).toFixed(0) %></td><td>-</td>
+                            </tr>
+                            <tr>
+                                <td>25</td><td><%= ancientDisruptor.getDamageTaken(result, 25, corrosiveProjection).toFixed(0) %></td><td><%= grineerNapalm.getDamageTaken(result, 25, corrosiveProjection).toFixed(0) %></td><td><%= corpusTech.getDamageTaken(result, 25, corrosiveProjection).toFixed(0) %></td>
+                            </tr>
+                            <tr>
+                                <td>50</td><td><%= ancientDisruptor.getDamageTaken(result, 50, corrosiveProjection).toFixed(0) %></td><td><%= grineerNapalm.getDamageTaken(result, 50, corrosiveProjection).toFixed(0) %></td><td><%= corpusTech.getDamageTaken(result, 50, corrosiveProjection).toFixed(0) %></td>
+                            </tr>
+                            <tr>
+                                <td>100</td><td><%= ancientDisruptor.getDamageTaken(result, 100, corrosiveProjection).toFixed(0) %></td><td><%= grineerNapalm.getDamageTaken(result, 100, corrosiveProjection).toFixed(0) %></td><td><%= corpusTech.getDamageTaken(result, 100, corrosiveProjection).toFixed(0) %></td>
+                            </tr>
+                            <tr>
+                                <td>200</td><td><%= ancientDisruptor.getDamageTaken(result, 200, corrosiveProjection).toFixed(0) %></td><td><%= grineerNapalm.getDamageTaken(result, 200, corrosiveProjection).toFixed(0) %></td><td><%= corpusTech.getDamageTaken(result, 200, corrosiveProjection).toFixed(0) %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="cell">
+                <div class="auras">
+                    <div class="cell">
+                        Auras
+                    </div>
+                </div>
+                <div class="modHeader">
+                    <div class="modCount">Active Mods: <%= weapon.get("activeModCount")%>,</div>
+                    <div class="modPoints">Total Points: <%= weapon.get("activeModPoints")%></div>
+                </div>
+                <div class="cell modules">
+                </div>
+            </div>
+        </script>
+        <script type="text/template" id="moduleTemplate">
+            <% var mod_fade = '' %>
+            <% if(module.get('currentRank') === 0) { mod_fade = 'faded' } else if (module.get('currentRank') != module.get('maxRanks')){ mod_fade = 'partialfade' } %>
+            <% var current_rank = module.get('currentRank') - 1 %>
+            <% if(current_rank === -1){ current_rank = "-";} %>
+            <div class="inc rank noselect">+</div>
+            <div class="mid rank noselect <%= mod_fade%>"><%= current_rank %> / <%= module.get('maxRanks') - 1 %></div>
+            <div class="dec rank noselect">-</div>
+            <div class="moduletext <%= mod_fade%>"><%= module.get('name')%> <span class="damageDiff">(+<%= module.get('moduleDpsDifference').toFixed(0) %>/<%= module.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span></div>
+            <div class="popupContainer">
+                <div class="popup hidden">
+                    <%var percents = module.getPercents();%>
+                    <%var types = module.get('types');%>
+                    <% for(key in percents){%>
+                        <div><%= key %>: <%= percents[key]%>% (<%=types[key]%>% per point)</div>
+                    <%}%>
+                </div>
+            </div>
+        </script>
+        <script type="text/template" id="auraHeaderTemplate">
+            <div class="cell auras" id="auraHeader">AURAS</div>
+            <div class="cell auras" id="auras"></div>
+            <div class="cell auras noselect recalc">Recalculate all</div>
+        </script>
+        <script type="text/template" id="auraTemplate">
+            <%var percents = aura.getPercents();%>
+            <% var mod_fade = '' %>
+            <% if(aura.get('currentRank') === 0) { mod_fade = 'faded' } else if (aura.get('currentRank') != aura.get('maxRanks')){ mod_fade = 'partialfade' } %>
+            <% var current_rank = aura.get('currentRank') - 1 %>
+            <% var people = Math.floor((aura.get('currentRank') - 1) / 6) + 1 %>
+            <% current_rank = (current_rank % 6) %>
+            <% if(current_rank === -1){ current_rank = "-";} %>
+            <div class="inc rank noselect">+</div>
+            <div class="mid rank noselect <%= mod_fade%>"><%= current_rank %> / <%= (aura.get('maxRanks') - 1) % 6 %> (<%= people %>)</div>
+            <div class="dec rank noselect">-</div>
+            <div class="moduletext <%= mod_fade%>"><%= percents[Object.keys(percents)[0]] %>% <%= aura.get('name')%> <span class="damageDiff">(+<%= aura.get('moduleDpsDifference').toFixed(0) %>/<%= aura.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span>
+            <div class="popupContainer">
+                <div class="popup aura hidden">
+                    <%var types = aura.get('types');%>
+                    <% for(key in percents){%>
+                        <div><%= key %>: <%= percents[key]%>% (<%=types[key]%>% per point)</div>
+                    <%}%>
+                </div>
+            </div>
+        </script>
+        <script type="text/template" id="optionsTemplate">
+            <div class="option noselect <%= op.get('option')%> mark"><%= op.get('name')%></div>
+        </script>
+        <script type="text/template" id="weaponHeaderTemplate">
+            <div class="box weaponTypeHeader <%= weaponType.toLowerCase() %>" id="<%= weaponType.toLowerCase()%>">
+                <div class="weaponCategoryHeader">
+                    <div class="cell" id="sortContainer"><%= weaponType.toUpperCase() %>S</div>
+                </div>
+            </div>
+        </script>
+        <script type="text/template" id="weaponCategoryTemplate">
+            <div></div>
+        </script>
+        <script type="text/template" id="sortTemplate">
+            <% var local_name = sortType.get('name').toLowerCase().replace(/ /g,'') %>
+            <% var state =  "" %>
+            <% if(sort_name === local_name){  
+                    state = ""
+               } else {
+                    state = "faded" 
+               } %>
+            <div class="sortType <%= local_name %> <%= (sort_asc) ? "asc" : "desc" %> noselect <%= state %>"><%= sortType.get('name')%></div>
+        </script>
+        <script type="text/template" id="searchTemplate">
+            <div class="filter"><input type="text" class="filter" placeholder="Filter name.."></input></div>
+        </script>
+    </body>
+</html>
