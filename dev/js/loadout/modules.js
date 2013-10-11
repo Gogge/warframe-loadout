@@ -18,7 +18,6 @@ function   ($, _, Backbone) {
             var temp_calc = {};
             for(var key in calculated_types){
                 temp_calc[key] = calculated_types[key] * rank;
-                //console.log(key + ": " + temp_calc[key] + ", rank:" + rank);
             }
             return temp_calc;
         },
@@ -714,6 +713,7 @@ function   ($, _, Backbone) {
            case 'acrid':
                mods = new ModuleCollection([
                         new HornetStrike(), 
+                        new BarrelDiffusion(), 
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger(), 
@@ -734,7 +734,8 @@ function   ($, _, Backbone) {
                break;
            case 'elemental':
                mods = new ModuleCollection([
-                        new HornetStrike(), 
+                        new HornetStrike(),  
+                        new BarrelDiffusion(),
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger(), 
@@ -755,7 +756,8 @@ function   ($, _, Backbone) {
                break;
            case 'crit':
                mods = new ModuleCollection([
-                        new HornetStrike(), 
+                        new HornetStrike(),  
+                        new BarrelDiffusion(),
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger(), 
@@ -776,7 +778,8 @@ function   ($, _, Backbone) {
                break;
            case 'speed':
                mods = new ModuleCollection([
-                        new HornetStrike(), 
+                        new HornetStrike(),  
+                        new BarrelDiffusion(),
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger(), 
@@ -797,7 +800,8 @@ function   ($, _, Backbone) {
                break;
            case 'continous':
                mods = new ModuleCollection([
-                        new HornetStrike(), 
+                        new HornetStrike(),  
+                        new BarrelDiffusion(),
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger({currentRank:0}), 
@@ -818,7 +822,8 @@ function   ($, _, Backbone) {
                break;
            default:
                mods = new ModuleCollection([
-                        new HornetStrike(), 
+                        new HornetStrike(),  
+                        new BarrelDiffusion(),
                         new LethalTorrent(), 
                         new NoReturn(), 
                         new Gunslinger(), 

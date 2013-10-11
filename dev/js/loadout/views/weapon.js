@@ -164,9 +164,6 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
             weaponCategory.render();
             if(categoryName === "Favorite"){
                 weaponCategory.listenTo(favoriteCollection, 'add remove', weaponCategory.render);
-                
-                
-                //weaponCategory.$el.append('<div class="filter">Search:<input class="filter" type="text"></input></div>');
             }
             $(this.el).append(weaponCategory.el);
             if(categoryName === "Favorite"){
