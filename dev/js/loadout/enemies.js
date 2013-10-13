@@ -25,6 +25,9 @@ function   ($, _, Backbone, Auras) {
             if(!level){
                 level = this.get('level');
             }
+            if(!corrosiveProjection){
+                corrosiveProjection = 0;
+            }
             var damageTaken = 0;
             var armor = this.getArmor(level, corrosiveProjection);
             var damageMultipliers = this.get('damageMultipliers');
@@ -69,7 +72,7 @@ function   ($, _, Backbone, Auras) {
         }
     });
     
-    Charger = Enemy.extend({
+    InfestedCharger = Enemy.extend({
         initialize:function(){
             //console.log("enemy init");
         },
@@ -131,6 +134,21 @@ function   ($, _, Backbone, Auras) {
             baseLevel:15,
             level:15,
             baseArmor:50,
+            faction:"Corpus",
+            damageMultipliers:{'Electricity':2.0},
+            armorIgnore:{'Armor Piercing':true, 'Physics Impact':true, 'Poison':true, 'Serrated Blade':true}
+        }
+    });
+    
+    CorpusCrewman = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corpus Crewman",
+            baseLevel:1,
+            level:1,
+            baseArmor:25,
             faction:"Corpus",
             damageMultipliers:{'Electricity':2.0},
             armorIgnore:{'Armor Piercing':true, 'Physics Impact':true, 'Poison':true, 'Serrated Blade':true}

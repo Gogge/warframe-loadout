@@ -36,19 +36,33 @@ function   ($, _, Backbone) {
     ModuleCollection = Backbone.Collection.extend({
        model: Module
     });
+    
+    //
+    // Universal
+    //
+    
+    AmmoMutator = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Ammo Mutator", 
+            types:{'Pistol Rifle Conversion':12.5, 'Sniper Shotgun Conversion':25},
+            maxRanks:4,
+            currentRank:4,
+            baseCost:3
+        }
+    });
 
     //
     //  Rifle Mods
     //
-
-    
     
     Bane = Module.extend({
        initialize:function(){
         },
         defaults:{
             name:"Bane", 
-            types:{'Damage':5}, 
+            types:{'Faction Damage':5}, 
             maxRanks:6,
             currentRank:6,
             baseCost:3
@@ -319,7 +333,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Expel", 
-            types:{'Damage':5}, 
+            types:{'Faction Damage':5}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:3
@@ -529,8 +543,8 @@ function   ($, _, Backbone) {
         defaults:{
             name:"Blaze", 
             types:{'Damage':15, 'Fire':15}, 
-            maxRanks:6,
-            currentRank:6,
+            maxRanks:4,
+            currentRank:4,
             baseCost:5
         }
     });
@@ -543,7 +557,7 @@ function   ($, _, Backbone) {
             types:{'Crit Chance':15}, 
             maxRanks:6, 
             currentRank:6,
-            baseCost:4
+            baseCost:3
         }
     });
     
@@ -588,7 +602,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Cleanse", 
-            types:{'Damage':5}, 
+            types:{'Faction Damage':5}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:3
@@ -729,7 +743,8 @@ function   ($, _, Backbone) {
                         new TargetCracker({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
                break;
            case 'elemental':
@@ -751,7 +766,8 @@ function   ($, _, Backbone) {
                         new TargetCracker({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
                break;
            case 'crit':
@@ -773,7 +789,8 @@ function   ($, _, Backbone) {
                         new TargetCracker(),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
                break;
            case 'speed':
@@ -795,7 +812,8 @@ function   ($, _, Backbone) {
                         new TargetCracker({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
                break;
            case 'continous':
@@ -817,7 +835,8 @@ function   ($, _, Backbone) {
                         new TargetCracker(),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
                break;
            default:
@@ -828,18 +847,19 @@ function   ($, _, Backbone) {
                         new NoReturn(), 
                         new Gunslinger(), 
                         new Quickdraw(), 
-                        new SlipMagazine(), 
+                        new SlipMagazine({currentRank:0}), 
                         new StunningSpeed({currentRank:0}), 
                         new HeatedCharge({currentRank:0}), 
                         new DeepFreeze({currentRank:0}), 
                         new Convulsion({currentRank:0}), 
-                        new Expel({currentRank:0}),
+                        new Expel(),
                         new IceStorm(),
                         new PistolGambit({currentRank:0}),
                         new TargetCracker({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
-                        new TaintedClip({currentRank:0})
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                     ]);
        }
        return mods;
@@ -850,164 +870,171 @@ function   ($, _, Backbone) {
         switch(buildType){
             case 'elemental':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger(),
-                            new PiercingHit(), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike({currentRank:0}), 
-                            new VitalSense({currentRank:0}), 
-                            new Hellfire(), 
-                            new CryoRounds(), 
-                            new Stormbringer(),
-                            new Wildfire(),
-                            new HammerShot({currentRank:0}),
-                            new Bane({currentRank:0}),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
-                        ]);
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new Wildfire(),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
                break;
             case 'crit':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger(),
-                            new PiercingHit(), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike(), 
-                            new VitalSense(), 
-                            new Hellfire({currentRank:0}), 
-                            new CryoRounds({currentRank:0}), 
-                            new Stormbringer({currentRank:0}),
-                            new Wildfire(),
-                            new HammerShot(),
-                            new Bane({currentRank:0}),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire(),
+                        new HammerShot(),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                      ]);
                 break;
             case 'continous':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger({currentRank:0}),
-                            new PiercingHit(), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike(), 
-                            new VitalSense(), 
-                            new Hellfire({currentRank:0}), 
-                            new CryoRounds({currentRank:0}), 
-                            new Stormbringer({currentRank:0}),
-                            new Wildfire(),
-                            new HammerShot(),
-                            new Bane(),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire(),
+                        new HammerShot(),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                      ]);
                 break;
             case 'continousElemental':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger({currentRank:0}),
-                            new PiercingHit({currentRank:0}), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike(), 
-                            new VitalSense(), 
-                            new Hellfire(), 
-                            new CryoRounds(), 
-                            new Stormbringer(),
-                            new Wildfire(),
-                            new HammerShot({currentRank:0}),
-                            new Bane({currentRank:0}),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit({currentRank:0}), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new Wildfire(),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                      ]);
                 break;
             case 'ogris':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger(),
-                            new PiercingHit(), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike({currentRank:0}), 
-                            new VitalSense({currentRank:0}), 
-                            new Hellfire(), 
-                            new CryoRounds(), 
-                            new Stormbringer(),
-                            new Wildfire({currentRank:0}),
-                            new HammerShot({currentRank:0}),
-                            new Bane({currentRank:0}),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber(),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber(),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
                      ]);
                 break;
             case 'torid':
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger(),
-                            new PiercingHit(), 
-                            new Shred(), 
-                            new FastHands(), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike({currentRank:0}), 
-                            new VitalSense({currentRank:0}), 
-                            new Hellfire({currentRank:0}), 
-                            new CryoRounds({currentRank:0}), 
-                            new Stormbringer({currentRank:0}),
-                            new Wildfire(),
-                            new HammerShot({currentRank:0}),
-                            new Bane(),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
-                        ]);
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred(), 
+                        new FastHands(), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire(),
+                        new HammerShot({currentRank:0}),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
                break;
             default:
                 mods = new ModuleCollection([
-                            new Serration(), 
-                            new SplitChamber(), 
-                            new SpeedTrigger(),
-                            new PiercingHit(), 
-                            new Shred({currentRank:0}), 
-                            new FastHands({currentRank:0}), 
-                            new MagazineWarp({currentRank:0}), 
-                            new PointStrike(), 
-                            new VitalSense(), 
-                            new Hellfire({currentRank:0}), 
-                            new CryoRounds({currentRank:0}), 
-                            new Stormbringer({currentRank:0}), 
-                            new Wildfire(),
-                            new HammerShot(),
-                            new Bane({currentRank:0}),
-                            new CriticalDelay({currentRank:0}),
-                            new HeavyCaliber({currentRank:0}),
-                            new TaintedMag({currentRank:0}),
-                            new VilePrecision({currentRank:0})
-                        ]);
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}), 
+                        new Wildfire(),
+                        new HammerShot(),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
                 
         }
         return mods;
@@ -1018,66 +1045,69 @@ function   ($, _, Backbone) {
         switch(buildType){
             case 'crit':
                 mods = new ModuleCollection([
-                            new PointBlank,
-                            new HellsChamber(),
-                            new AcceleratedBlast(), 
-                            new Blaze(),
-                            new Flechette(),
-                            new IncindiaryCoat({currentRank:0}),
-                            new ChargedShell({currentRank:0}), 
-                            new ChillingGrasp({currentRank:0}),
-                            new Cleanse({currentRank:0}),
-                            new AmmoStock({currentRank:0}),
-                            new Blunderbuss(),
-                            new Ravage(),
-                            new ShotgunSpazz(),
-                            new TacticalPump({currentRank:0}),
-                            new BurdenedShell({currentRank:0}),
-                            new TaintedShell({currentRank:0}),
-                            new ViciousSpread({currentRank:0})
-                        ]);
+                        new PointBlank,
+                        new HellsChamber(),
+                        new AcceleratedBlast(), 
+                        new Blaze(),
+                        new Flechette(),
+                        new IncindiaryCoat({currentRank:0}),
+                        new ChargedShell({currentRank:0}), 
+                        new ChillingGrasp({currentRank:0}),
+                        new Cleanse({currentRank:0}),
+                        new AmmoStock({currentRank:0}),
+                        new Blunderbuss(),
+                        new Ravage(),
+                        new ShotgunSpazz(),
+                        new TacticalPump({currentRank:0}),
+                        new BurdenedShell({currentRank:0}),
+                        new TaintedShell({currentRank:0}),
+                        new ViciousSpread({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
                break;
                case 'sobek':
                 mods = new ModuleCollection([
-                            new PointBlank,
-                            new HellsChamber(),
-                            new AcceleratedBlast(), 
-                            new Blaze(),
-                            new Flechette(),
-                            new IncindiaryCoat({currentRank:0}),
-                            new ChargedShell({currentRank:0}), 
-                            new ChillingGrasp({currentRank:0}),
-                            new Cleanse({currentRank:0}),
-                            new AmmoStock(),
-                            new Blunderbuss({currentRank:0}),
-                            new Ravage({currentRank:0}),
-                            new ShotgunSpazz(),
-                            new TacticalPump(),
-                            new BurdenedShell({currentRank:0}),
-                            new TaintedShell({currentRank:0}),
-                            new ViciousSpread({currentRank:0})
-                        ]);
+                        new PointBlank,
+                        new HellsChamber(),
+                        new AcceleratedBlast(), 
+                        new Blaze(),
+                        new Flechette(),
+                        new IncindiaryCoat({currentRank:0}),
+                        new ChargedShell({currentRank:0}), 
+                        new ChillingGrasp({currentRank:0}),
+                        new Cleanse({currentRank:0}),
+                        new AmmoStock(),
+                        new Blunderbuss({currentRank:0}),
+                        new Ravage({currentRank:0}),
+                        new ShotgunSpazz(),
+                        new TacticalPump(),
+                        new BurdenedShell({currentRank:0}),
+                        new TaintedShell({currentRank:0}),
+                        new ViciousSpread({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
                break;
             default:
                 mods = new ModuleCollection([
-                            new PointBlank,
-                            new HellsChamber(),
-                            new AcceleratedBlast(), 
-                            new Blaze(),
-                            new Flechette(),
-                            new IncindiaryCoat({currentRank:0}),
-                            new ChargedShell({currentRank:0}), 
-                            new ChillingGrasp({currentRank:0}),
-                            new Cleanse({currentRank:0}),
-                            new AmmoStock({currentRank:0}),
-                            new Blunderbuss(),
-                            new Ravage(),
-                            new ShotgunSpazz(),
-                            new TacticalPump({currentRank:0}),
-                            new BurdenedShell({currentRank:0}),
-                            new TaintedShell({currentRank:0}),
-                            new ViciousSpread({currentRank:0})
-                        ]);
+                        new PointBlank,
+                        new HellsChamber(),
+                        new AcceleratedBlast(), 
+                        new Blaze(),
+                        new Flechette(),
+                        new IncindiaryCoat({currentRank:0}),
+                        new ChargedShell({currentRank:0}), 
+                        new ChillingGrasp({currentRank:0}),
+                        new Cleanse({currentRank:0}),
+                        new AmmoStock({currentRank:0}),
+                        new Blunderbuss(),
+                        new Ravage(),
+                        new ShotgunSpazz(),
+                        new TacticalPump({currentRank:0}),
+                        new BurdenedShell({currentRank:0}),
+                        new TaintedShell({currentRank:0}),
+                        new ViciousSpread({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
         }
         return mods;
     };

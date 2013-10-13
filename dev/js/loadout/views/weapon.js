@@ -11,8 +11,13 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
              this.$el.addClass("normal");
         },
         events: {
-            "click div.fav": "addFavorite"
+            "click div.fav": "addFavorite",
+            "mouseenter table.damage": "descriptionPopup",
+            "mouseleave table.damage": "descriptionPopup"
             //"click span.name": "toggleMinimized"
+        },
+        descriptionPopup:function(e){
+            this.$el.find(".popup.dps").toggleClass("hidden");
         },
         toggleMinimized:function(){
             this.$el.toggleClass("minimized");
@@ -37,9 +42,11 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
                 for(var aura in originalAuras){
                     clonedAuras.models[aura] = $.extend(true, {}, originalAuras[aura]);
                 }
-                clonedWeapon.set('auras', clonedAuras);             
-                
+                clonedWeapon.set('auras', clonedAuras);
+                // Update DPS stats after cloning the mods/aura, stats is from the default configuration otherwise
+                clonedWeapon.updateModuleDps();
                 clonedWeapon.set('firstRender', true);
+                
                 this.options.favoriteCollection.add(clonedWeapon);
             }
         },
@@ -135,7 +142,9 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
             var sortList = new WeaponSortView.SortCollection([
                 new WeaponSortView.SortType({name:"Name", option:"name"}),
                 new WeaponSortView.SortType({name:"DPS", option:"dps"}),
-                new WeaponSortView.SortType({name:"AP DPS", option:"apdps"})
+                new WeaponSortView.SortType({name:"AP DPS", option:"apdps"}),
+                new WeaponSortView.SortType({name:"Shot", option:"shot"}),
+                new WeaponSortView.SortType({name:"Burst", option:"burst"}),
             ]);
             var sortListView = new WeaponSortView.SortListView({collection:sortList, weaponCategory:this.collection, weaponCategoryView:this});
             sortListView.render();
