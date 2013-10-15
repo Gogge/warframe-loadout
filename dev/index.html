@@ -16,12 +16,24 @@
             <% if (categoryName === "Favorite") { color_class = "fav" }%>
             <div class="cell">
                 <div class="weaponHeader">
-                    <span class="name <%=color_class%>"><%= weapon.get("name") %></span>
-                    <span class="dps"><%= result.dps.toFixed(0) %> DPS</span> <span class="burstdps"><%= result.burst.toFixed(0)%> DPS Burst</span>
+                    <span class="name <%=color_class%>"><%= weapon.get("name") %></span><span class="dps"><%= result.dps.toFixed(0) %> DPS</span> 
                     <div class="divitis fav <%= (categoryName === "Favorite") ? "rem" : "add" %> noselect"><%= (categoryName === "Favorite") ? "&#9734; Remove" : "&#9733; Add" %> Favorite</div>
+                    <%if(categoryName === "Linked"){%>
+                    <div class="divitis share rem noselect">Remove Linked</div>
+                    <%}%>
+                    <div class="divitis share pop noselect"><span class="share arrow noselect">&#8619;</span> Share</div>
+                    <div class="popupContainer">
+                        <div class="popup sharepopup hidden">
+                            <input type="text" class="shareText">
+                            </input>
+                        </div>
+                    </div>
+                    
                 </div>
                 <div class="mastery">
-                    <span class="expandeddps">Infested: <%= result.infestedDps.toFixed(0) %> DPS, Grineer: <%= result.grineerDps.toFixed(0) %> DPS, Corpus: <%= result.corpusDps.toFixed(0) %> DPS</span><br>
+                    <span class="expandeddps">Burst: <%= result.burst.toFixed(0)%> DPS, Infested: <%= result.infestedDps.toFixed(0) %> DPS, Grineer: <%= result.grineerDps.toFixed(0) %> DPS, Corpus: <%= result.corpusDps.toFixed(0) %> DPS</span>
+                    
+                    <br>
                     Mastery rank: <%= weapon.get('masteryRank')%>
                 </div>
                 <div class="cell">
@@ -163,10 +175,12 @@
             <% if(module.get('currentRank') === 0) { mod_fade = 'faded' } else if (module.get('currentRank') != module.get('maxRanks')){ mod_fade = 'partialfade' } %>
             <% var current_rank = module.get('currentRank') - 1 %>
             <% if(current_rank === -1){ current_rank = "-";} %>
+            <% var sign = ""%>
+            <% if(module.get('moduleDpsDifference') >= 0) { sign = "+"}%>
             <div class="inc rank noselect">+</div>
             <div class="mid rank noselect <%= mod_fade%>"><%= current_rank %> / <%= module.get('maxRanks') - 1 %></div>
             <div class="dec rank noselect">-</div>
-            <div class="moduletext <%= mod_fade%>"><%= module.get('name')%> <span class="damageDiff">(+<%= module.get('moduleDpsDifference').toFixed(0) %>/<%= module.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span></div>
+            <div class="moduletext <%= mod_fade%>"><%= module.get('name')%> <span class="damageDiff">(<%= sign%><%= module.get('moduleDpsDifference').toFixed(0) %>/<%= module.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span></div>
             <div class="popupContainer">
                 <div class="popup hidden">
                     <%var percents = module.getPercents();%>
@@ -178,6 +192,7 @@
                             <div><%= key %>: <%= percents[key] / 100%> meters (<%=types[key] / 100%> m per point)</div>
                         <%}%>
                     <%}%>
+                    <div class="totalModDps"></div>
                 </div>
             </div>
         </script>
@@ -194,16 +209,19 @@
             <% var people = Math.floor((aura.get('currentRank') - 1) / 6) + 1 %>
             <% current_rank = (current_rank % 6) %>
             <% if(current_rank === -1){ current_rank = "-";} %>
+            <% var sign = ""%>
+            <% if(aura.get('moduleDpsDifference') >= 0) { sign = "+"}%>
             <div class="inc rank noselect">+</div>
             <div class="mid rank noselect <%= mod_fade%>"><%= current_rank %> / <%= (aura.get('maxRanks') - 1) % 6 %> (<%= people %>)</div>
             <div class="dec rank noselect">-</div>
-            <div class="moduletext <%= mod_fade%>"><%= percents[Object.keys(percents)[0]] %>% <%= aura.get('name')%> <span class="damageDiff">(+<%= aura.get('moduleDpsDifference').toFixed(0) %>/<%= aura.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span>
+            <div class="moduletext <%= mod_fade%>"><%= percents[Object.keys(percents)[0]] %>% <%= aura.get('name')%> <span class="damageDiff">(<%= sign%><%= aura.get('moduleDpsDifference').toFixed(0) %>/<%= aura.get('moduleArmorPiercingDpsDifference').toFixed(0) %>)</span>
             <div class="popupContainer">
                 <div class="popup aura hidden">
                     <%var types = aura.get('types');%>
                     <% for(key in percents){%>
                         <div><%= key %>: <%= percents[key]%>% (<%=types[key]%>% per point)</div>
                     <%}%>
+                    <div class="totalAuraDps"></div>
                 </div>
             </div>
         </script>
@@ -213,7 +231,7 @@
         <script type="text/template" id="weaponHeaderTemplate">
             <div class="box weaponTypeHeader <%= weaponType.toLowerCase() %>" id="<%= weaponType.toLowerCase()%>">
                 <div class="weaponCategoryHeader">
-                    <div class="cell" id="sortContainer"><%= weaponType.toUpperCase() %>S</div>
+                    <div class="cell" id="sortContainer"><%= weaponType.toUpperCase() %><% if(weaponType.toUpperCase() !== "LINKED"){%>S<%}%></div>
                 </div>
             </div>
         </script>

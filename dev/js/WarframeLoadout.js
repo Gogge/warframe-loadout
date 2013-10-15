@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout v0.1
+ * Warframe Loadout v0.1d
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license
@@ -19,6 +19,11 @@ require.config({
 require(['jquery', 'underscore', 'backbone', 'jquery-cookie', 'loadout/modules', 'loadout/weapons', 'loadout/enemies', 'loadout/auras', 'loadout/views/option', 'loadout/views/weapon', 'loadout/views/aura'],
 function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, WeaponView, AuraView) {
     
+    //
+    // String to filter unwanted characters
+    //
+    urlFilterString = /[^a-zA-Z0-9/#]/g;
+    
     $.expr[":"].icontains = $.expr.createPseudo(function (arg) {                                                                                                                                                                
         return function (elem) {                                                            
             return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;        
@@ -33,6 +38,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         new Option({name:"Shotguns", option:"shotgun"}), 
         new Option({name:"Sniper Rifles", option:"sniper"}), 
         new Option({name:"Bows/Other", option:"bow"}),
+        new Option({name:"Linked", option:"linked"}),
         new Option({name:"Favorites", option:"favorite"})
     ]);
     
@@ -69,42 +75,94 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     //
     // Create new weapon/module/auras from saved cookie values
     //
+   
+    addWeaponsFromCookies = function(weaponStringList, weaponList){
+        for(var i = 0;i<weaponStringList.length;i++){
+            var weapon = Weapons.weaponList.where({name:weaponStringList[i].name})[0];
+            if (weapon){
+                var clonedWeapon = new weapon.constructor();
+                var modules = clonedWeapon.get('modules').models;
+                for(var mod in modules){
+                    var currentModName = modules[mod].get('name');
+                    // Need to check if the module exists in the saved cookie,
+                    // might be that the mod list has been updated server side
+                    if(weaponStringList[i].mods[currentModName] !== undefined){
+                        modules[mod].set('currentRank', weaponStringList[i].mods[currentModName]);
+                    }
+                }
+                clonedWeapon.get('modules').modules = modules;
+
+                var auras = clonedWeapon.get('auras').models;
+                for(var aura in auras){
+                    var currentAuraName = auras[aura].get('name');
+                    if(weaponStringList[i].auras[currentAuraName] !== undefined){
+                        auras[aura].set('currentRank', weaponStringList[i].auras[currentAuraName]);
+                    }
+                }
+                clonedWeapon.get('auras').modules = auras;
+
+                clonedWeapon.set('firstRender', false);
+                clonedWeapon.updateModuleDps();
+                weaponList.add(clonedWeapon);
+            }
+        }
+    };
     
     var favoriteList = new Weapons.WeaponCollection([]);
-    var weaponSimpleStringList = [];
+    //var weaponSimpleStringList = [];
     if($.cookie('favorites')) {
-        weaponSimpleStringList = $.cookie('favorites');
+        addWeaponsFromCookies($.cookie('favorites'), favoriteList);
     };
-    for(var i = 0;i<weaponSimpleStringList.length;i++){
-        var weapon = Weapons.weaponList.where({name:weaponSimpleStringList[i].name})[0];
-        if (weapon){
-            var clonedWeapon = new weapon.constructor();
-            var modules = clonedWeapon.get('modules').models;
-            for(var mod in modules){
-                var currentModName = modules[mod].get('name');
-                // Need to check if the module exists in the saved cookie,
-                // might be that the mod list has been updated server side
-                if(weaponSimpleStringList[i].mods[currentModName] !== undefined){
-                    modules[mod].set('currentRank', weaponSimpleStringList[i].mods[currentModName]);
-                }
-            }
-            clonedWeapon.get('modules').modules = modules;
+    
+    //
+    // Create new weapon/module/auras from saved cookie values
+    //
+    var sharedList = new Weapons.WeaponCollection([]);
+    
+    if($.cookie('linked')) {
+        addWeaponsFromCookies($.cookie('linked'), sharedList);
+    };
+    
+    getWeaponFromSharedUrl = function(pageload){
+        var url = window.location.href;
+        if(url.indexOf('#') !== -1){
+            var lastLink = $.cookie('lastLink');
+            var urlString = url.slice(url.indexOf('#') + 1).replace(urlFilterString, '');
+            var sharedString = url.slice(url.indexOf('#') + 1).replace(urlFilterString, '').split("/");
+            
+            // Check if we just added this weapon
+            if (lastLink !== urlString){
+                $.cookie('lastLink', urlString);
+                if(sharedString && (sharedString[0].length !== 0)){
+                    var weaponTemp = Weapons.weaponList.at(parseInt(sharedString[0], 36));
+                    if(weaponTemp){
+                        var weapon = new weaponTemp.constructor();
+                        _.each(sharedString[1], function(aura, index){
+                            if(index <= weapon.get('auras').models.length - 1){
+                                weapon.get('auras').models[index].setModlevel(parseInt(aura,36));
+                            }
+                        });
+                        _.each(sharedString[2], function(mod, index){
+                            if(index <= weapon.get('modules').models.length - 1){
+                                weapon.get('modules').models[index].setModlevel(parseInt(mod,36));
+                            }
+                        });
 
-            var auras = clonedWeapon.get('auras').models;
-            for(var aura in auras){
-                var currentAuraName = auras[aura].get('name');
-                if(weaponSimpleStringList[i].auras[currentAuraName] !== undefined){
-                    auras[aura].set('currentRank', weaponSimpleStringList[i].auras[currentAuraName]);
+                        sharedList.add(weapon);
+                    }
                 }
+                // Show the linked option
+                $(".mark").not(".favorite").addClass("faded");
+                $(".mark.linked").removeClass("faded");
+                $(".weaponTypeHeader").not(".favorite").addClass("hidden");
+                $(".weaponTypeHeader.linked").removeClass("hidden");
             }
-            clonedWeapon.get('auras').modules = auras;
-
-            clonedWeapon.set('firstRender', false);
-            clonedWeapon.updateModuleDps();
-            favoriteList.add(clonedWeapon);
         }
-    }
-
+    };
+    
+    $(window).on('hashchange', function() {
+        getWeaponFromSharedUrl(false);
+    });
     
     var weaponCategoriesList = {
             "Favorite":favoriteList,
@@ -112,12 +170,13 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
             "Rifle":rifleList, 
             "Shotgun":shotgunList, 
             "Sniper":sniperList, 
-            "Bow":bowList
+            "Bow":bowList,
+            "Linked":sharedList
     };
     
     
 
-    $(document).ready(function() {        
+    $(document).ready(function() {
         //
         // Options
         //
@@ -135,13 +194,18 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         
         
         // Hide/show stuff based on cookie settings
-        var hidden_options = ["rifle", "shotgun", "sniper", "bow"];
+        var hidden_options = Object.keys(weaponCategoriesList);
+        hidden_options.shift(); // Unhide the first item in the list, favorites
+        hidden_options.shift(); // Unhide the first item in the list, pistols
         if($.cookie('options')){
             hidden_options = $.cookie('options');
         } 
+
         for(var i = 0;i<hidden_options.length;i++){
-            $(".mark." + hidden_options[i]).addClass("faded");
+            $(".mark." + hidden_options[i].toLowerCase()).addClass("faded");
             $(".weaponTypeHeader." + hidden_options[i]).addClass("hidden");
         }
+        
+        getWeaponFromSharedUrl(true);
     });
 });

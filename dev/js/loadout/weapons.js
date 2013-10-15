@@ -9,15 +9,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
        initialize:function(){
         if(!this.get('modules')){this.set('modules', Modules.getNewPistolModCollection());};
         if(!this.get('auras')){this.set('auras', Auras.getNewAuraCollection());};
-        /*var result = this.getDps(this.getCalculatedModPercentages(), enemy);
-        this.set('result', result);
-        this.set('dps', result.dps);
-        this.set('apdps', result.apdps);
-        this.set('burst', result.burst);
-        this.set('shot', result.shot);
-        this.set('infestedDps', infestedCharger.getDamageTaken(result.dps));
-        this.set('grineerDps', grineerTrooper.getDamageTaken(result.dps));
-        this.set('corpusDps', corpusCrewman.getDamageTaken(result.dps));*/
+        
         this.updateModuleDps();
        },
        defaults: {
@@ -27,7 +19,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            return {};
        },
        getCalculatedModPercentages:function(){
-           var module_types = {'Damage':0, 'Faction Damage':0, 'Armor Piercing':0, 'Fire':0, 'Electrical':0, 'Freeze':0, 'Crit Chance':0, 'Crit Damage':0, 'multishot':0, 'Fire Rate':0, 'Reload Speed':0, 'Magazine Capacity':0};
+           var module_types = {'Damage':0, 'Faction Damage':0, 'Armor Piercing':0, 'Fire':0, 'Electrical':0, 'Freeze':0, 'Crit Chance':0, 'Crit Damage':0, 'Multishot':0, 'Fire Rate':0, 'Reload Speed':0, 'Magazine Capacity':0};
            this.get('modules').each(function(module){
                var calculated_mods = module.getPercents();
                for(var key in calculated_mods){
@@ -118,8 +110,8 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             var multishotDamage = 0.0;
             for (var key in result['damageBreakdown']){
                 // Add multishot
-                multishotDamage += result['damageBreakdown'][key] * module_types['multishot'] / 100;
-                result['damageBreakdown'][key] = result['damageBreakdown'][key] + (result['damageBreakdown'][key] * module_types['multishot'] / 100);
+                multishotDamage += result['damageBreakdown'][key] * module_types['Multishot'] / 100;
+                result['damageBreakdown'][key] = result['damageBreakdown'][key] + (result['damageBreakdown'][key] * module_types['Multishot'] / 100);
                 
                 // Calculate individual element DPS
                 result['dpsBreakdown'][key] = (result['damageBreakdown'][key] * magazineCapacity) / (magazineCapacity / fireRate + reloadSpeed);
@@ -156,6 +148,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['corpusDps'] = corpusCrewman.getDamageTaken(result, 1, corrosiveProjection);
             var apDps = new Enemies.AncientDisruptor().getDamageTaken(result, 200, corrosiveProjection);
             result['apdps'] = apDps;
+            
             return result;
         },
         updateModuleDps:function(){
@@ -176,6 +169,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             this.set('infestedDps', infestedCharger.getDamageTaken(weaponResult));
             this.set('grineerDps', grineerTrooper.getDamageTaken(weaponResult));
             this.set('corpusDps', corpusCrewman.getDamageTaken(weaponResult));
+            
             var baseDps = weaponResult.dps;
             var baseApDps = weaponResult.apdps;
 
@@ -183,6 +177,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             var activeModPoints = 0;
 
             this.get('modules').each(function(module){
+                
                 var diffDps = 0;
                 var diffApDps = 0;
                 if(module.get('currentRank') === module.get('maxRanks')) {
@@ -451,7 +446,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         new (Despair = Weapon.extend({
            initialize:function(){
              //console.log("Despair init!");
-             this.set('modules', Modules.getNewPistolModCollection('speed'));
+             this.set('modules', Modules.getNewPistolModCollection());
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1163,6 +1158,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            },
             specialDamageCalculations:function(damageBreakdown, module_types){
                var baseExplosionDamage = this.get('explosionDamage') * (100 + module_types['Damage']) / 100;
+               baseExplosionDamage = baseExplosionDamage * (100 + module_types['Faction Damage']) / 100;
                var damage = {};
                var armorPiercing = baseExplosionDamage * module_types['Armor Piercing'] / 100;
                var fire = baseExplosionDamage * module_types['Fire'] / 100;
@@ -1261,6 +1257,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            },
             specialDamageCalculations:function(damageBreakdown, module_types){
                var baseDotDamage = this.get('cloudTickDamage') * (100 + module_types['Damage']) / 100;
+               baseDotDamage = baseDotDamage * (100 + module_types['Faction Damage']) / 100;
                var baseTimeInCloud = 12.0; 
                baseDotDamage *= baseTimeInCloud; // one tick per second
                var damage = {};

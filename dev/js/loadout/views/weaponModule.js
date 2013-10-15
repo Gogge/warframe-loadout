@@ -39,6 +39,23 @@ function   ($, _, Backbone) {
             this.options.weaponView.render();
         },
         descriptionPopup:function(e){
+            var currentRank = this.model.get('currentRank');
+            var weapon = this.options.weaponView.model;
+            this.model.set('currentRank', 0);
+            var modPercentages = weapon.getCalculatedModPercentages();
+            var weaponResultZeroMod = weapon.getDps(modPercentages, "");
+            this.model.set('currentRank', this.model.get('maxRanks'));
+            modPercentages = weapon.getCalculatedModPercentages();
+            var weaponResultMaxMod = weapon.getDps(modPercentages, "");
+            this.model.set('currentRank', currentRank);
+            var modElement = this.$el.find(".popup");
+            var dps = (weaponResultMaxMod.dps - weaponResultZeroMod.dps).toFixed(0);
+            if (dps >= 0) {
+                dps = "+" + dps;
+            }
+            var apdps = (weaponResultMaxMod.apdps - weaponResultZeroMod.apdps).toFixed(0);
+            
+            modElement.children(".totalModDps").html("<br>" + (this.model.get('maxRanks')-1) + "/" + (this.model.get('maxRanks')-1) + " DPS: " + dps + "/" + apdps);
             this.$el.find(".popup").toggleClass("hidden");
         },
         render:function(){

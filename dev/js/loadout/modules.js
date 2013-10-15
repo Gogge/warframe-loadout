@@ -30,6 +30,9 @@ function   ($, _, Backbone) {
             if ((this.get("currentRank") - 1) >= 0){
                 this.set("currentRank", this.get("currentRank") - 1);
             }
+        },
+        setModlevel: function(level){
+            this.set("currentRank", Math.min(this.get("maxRanks"), level));
         }
     });
 
@@ -220,7 +223,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Split Chamber", 
-            types:{multishot:15}, 
+            types:{Multishot:15}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:9
@@ -297,7 +300,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Barrel Diffusion", 
-            types:{multishot:20}, 
+            types:{Multishot:20}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:5
@@ -405,7 +408,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Lethal Torrent", 
-            types:{multishot:10, 'Fire Rate':10}, 
+            types:{Multishot:10, 'Fire Rate':10}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:5
@@ -626,7 +629,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Hell's Chamber", 
-            types:{multishot:20}, 
+            types:{Multishot:20}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:9
@@ -906,9 +909,9 @@ function   ($, _, Backbone) {
                         new Hellfire({currentRank:0}), 
                         new CryoRounds({currentRank:0}), 
                         new Stormbringer({currentRank:0}),
-                        new Wildfire(),
+                        new Wildfire({currentRank:0}),
                         new HammerShot(),
-                        new Bane({currentRank:0}),
+                        new Bane(),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -995,18 +998,18 @@ function   ($, _, Backbone) {
                         new SpeedTrigger(),
                         new PiercingHit(), 
                         new Shred(), 
-                        new FastHands(), 
-                        new MagazineWarp({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp(), 
                         new PointStrike({currentRank:0}), 
                         new VitalSense({currentRank:0}), 
                         new Hellfire({currentRank:0}), 
                         new CryoRounds({currentRank:0}), 
                         new Stormbringer({currentRank:0}),
-                        new Wildfire(),
+                        new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
                         new CriticalDelay({currentRank:0}),
-                        new HeavyCaliber({currentRank:0}),
+                        new HeavyCaliber(),
                         new TaintedMag({currentRank:0}),
                         new VilePrecision({currentRank:0}),
                         new AmmoMutator({currentRank:0})
@@ -1026,9 +1029,9 @@ function   ($, _, Backbone) {
                         new Hellfire({currentRank:0}), 
                         new CryoRounds({currentRank:0}), 
                         new Stormbringer({currentRank:0}), 
-                        new Wildfire(),
+                        new Wildfire({currentRank:0}),
                         new HammerShot(),
-                        new Bane({currentRank:0}),
+                        new Bane(),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),

@@ -32,9 +32,10 @@ function   ($, _, Backbone, Auras) {
             var armor = this.getArmor(level, corrosiveProjection);
             var damageMultipliers = this.get('damageMultipliers');
             var armorIgnore = this.get('armorIgnore');
-            
+
             for (var key in damageBreakdown){
                 var localDamageTaken = 0;
+                
                 if(damageMultipliers[key]){
                     localDamageTaken += damageBreakdown[key] * damageMultipliers[key];
                 } else {
@@ -44,11 +45,10 @@ function   ($, _, Backbone, Auras) {
                     // From Pwnatron's spreadsheet:
                     // 100 / (armor + 100) * damage * damage_type_mp * special_spot_mp
                     // We (currently) just ignore weak spots, and damage multiplier has already been done above
-                    localDamageTaken = Math.max((100 / (armor + 100) * damageBreakdown[key]), 0);
+                    localDamageTaken = Math.max((100 / (armor + 100) * localDamageTaken), 0);
                 }
                 damageTaken += localDamageTaken;
-            }
-            
+            }            
             return (damageTaken * result["Magazine Capacity"]) / (result["Magazine Capacity"] / result["Fire Rate"] + result["Reload Speed"]);
         }
     });
@@ -116,7 +116,7 @@ function   ($, _, Backbone, Auras) {
             level:1,
             baseArmor:200,
             faction:"Grineer",
-            damageMultipliers:{'Armor Piercing':1.5, 'Electricity':1.25, 'Fire':1.25},
+            damageMultipliers:{'Armor Piercing':1.5, 'Electrical':1.25, 'Fire':1.25},
             armorIgnore:{'Armor Piercing':true, 'Physics Impact':true, 'Poison':true, 'Serrated Blade':true}
         }
     });
@@ -135,7 +135,7 @@ function   ($, _, Backbone, Auras) {
             level:15,
             baseArmor:50,
             faction:"Corpus",
-            damageMultipliers:{'Electricity':2.0},
+            damageMultipliers:{'Electrical':2.0},
             armorIgnore:{'Armor Piercing':true, 'Physics Impact':true, 'Poison':true, 'Serrated Blade':true}
         }
     });
@@ -150,7 +150,7 @@ function   ($, _, Backbone, Auras) {
             level:1,
             baseArmor:25,
             faction:"Corpus",
-            damageMultipliers:{'Electricity':2.0},
+            damageMultipliers:{'Electrical':2.0},
             armorIgnore:{'Armor Piercing':true, 'Physics Impact':true, 'Poison':true, 'Serrated Blade':true}
         }
     });

@@ -20,6 +20,34 @@ a:active{
 a:hover{
     color:#ffffff;
 }
+span.share{
+    color:#ffcc77;
+}
+div.share{
+    /*color:#ffcc77;*/
+    margin-left:5px;
+    background:#484848;
+    /*border:1px solid #ffca86;*/
+}
+div.share.rem{
+    color:#cccccc;
+    border:none;
+    background:#484848;
+}
+div.share:hover{
+    background:#555555;
+}
+.popup.sharepopup{
+    left:250px;
+    top:3px;
+}
+input.shareText{
+    width:300px;
+    color:#eeeeee;
+    font-size:11px;
+    background:none;
+    border:none;
+}
 div.links{
     text-align: center;
     padding-bottom:5px;
@@ -44,6 +72,7 @@ span.name{
     color:white;
 }
 span.dps{
+    margin-left:2px;
     font-size: 13px;
     margin-top: 3px;
     margin-bottom: 3px;
@@ -52,7 +81,7 @@ span.burstdps{
     color:#cccccc;
 }
 .mastery{
-    margin-top:-3px;
+    margin-top:-2px;
     padding-left:2px;
     color:#aaaaaa;
 }

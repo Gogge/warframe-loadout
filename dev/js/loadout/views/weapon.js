@@ -1,5 +1,5 @@
-define(['jquery', 'underscore', 'backbone', 'loadout/enemies', 'loadout/auras', 'loadout/views/weaponModule', 'loadout/views/weaponSort', 'loadout/views/search'],
-function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, SearchView) {
+define(['jquery', 'underscore', 'backbone', 'loadout/weapons', 'loadout/enemies', 'loadout/auras', 'loadout/views/weaponModule', 'loadout/views/weaponSort', 'loadout/views/search'],
+function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSortView, SearchView) {
     
     WeaponView = Backbone.View.extend({
         tagName:"div",
@@ -12,6 +12,8 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
         },
         events: {
             "click div.fav": "addFavorite",
+            "click div.share.rem": "removeShare",
+            "click div.share.pop": "sharePopup",
             "mouseenter table.damage": "descriptionPopup",
             "mouseleave table.damage": "descriptionPopup"
             //"click span.name": "toggleMinimized"
@@ -21,6 +23,36 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
         },
         toggleMinimized:function(){
             this.$el.toggleClass("minimized");
+        },
+        removeShare:function(){
+            this.$el.toggleClass("remove");
+            var self = this;
+            _.delay(function(){ self.options.shareCollection.remove(self.model); }, 500);
+        },
+        sharePopup:function(){
+            var url = window.location.href;
+            if(url.indexOf("#") !== -1){
+                // Trim away the part after #
+                url = url.slice(0, (url.indexOf('#')));
+            }
+            var popup = this.$el.find(".popup.sharepopup");
+            var wIndex = Weapons.weaponList.indexOf(Weapons.weaponList.findWhere({name:this.model.get('name')})).toString(36);
+            var wAuras = "";
+            var wMods = "";
+            var auras = this.model.get('auras').models;
+            var modules = this.model.get('modules').models;
+            
+            for (var aura in auras){
+                wAuras += auras[aura].get('currentRank').toString(36);
+            };
+
+            for (var mod in modules){
+                wMods += modules[mod].get('currentRank').toString(36);
+            };
+            
+            popup.children("input").val(url + "#" + wIndex + "/" + wAuras + "/" + wMods);
+            popup.toggleClass("hidden");
+            popup.children(".shareText")[0].select();
         },
         addFavorite:function(){
             if(this.options.categoryName === "Favorite"){
@@ -105,6 +137,17 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
                 });
                 $.cookie('favorites', stringList);
             }
+            
+            if(this.options.categoryName === "Linked"){
+                if(weapon.get('firstRender')){
+                    this.$el.addClass("remove");
+                }
+                var stringList = [];
+                this.options.shareCollection.each(function(weapon){
+                    stringList.push(weapon.getSimpleString());
+                });
+                $.cookie('linked', stringList);
+            }
         }
     });
 
@@ -116,7 +159,8 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
             this.options.collection.sort();
         },
         renderWeapon:function(model){
-            var weaponView = new WeaponView({model:model, favoriteCollection:this.options.favoriteCollection, categoryName:this.options.categoryName});
+            var weaponView = new WeaponView({model:model, favoriteCollection:this.options.favoriteCollection, shareCollection:this.options.shareCollection, categoryName:this.options.categoryName});
+            //_.extend(weaponView, Backbone.Events);
             weaponView.render();
             
             $(this.el).children(".weaponTypeHeader").append(weaponView.el);
@@ -159,6 +203,11 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
                     $(this.el).find("#favorite").addClass("hidden");
                 }
             }
+            if((this.options.categoryName === "Linked")){
+                if (this.collection.length === 0) {
+                    $.cookie('linked', "");
+                }
+            }
         }
     });
     
@@ -168,11 +217,15 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
         initialize:function(){
             _.bindAll(this, "renderCategory");
         },
-        renderCategory:function(collection, categoryName, favoriteCollection){
-            var weaponCategory = new WeaponListView({collection:collection, categoryName:categoryName, favoriteCollection:favoriteCollection});
+        renderCategory:function(collection, categoryName, favoriteCollection, shareCollection){
+            var weaponCategory = new WeaponListView({collection:collection, categoryName:categoryName, favoriteCollection:favoriteCollection, shareCollection:shareCollection});
             weaponCategory.render();
             if(categoryName === "Favorite"){
                 weaponCategory.listenTo(favoriteCollection, 'add remove', weaponCategory.render);
+                
+            }
+            if(categoryName === "Linked"){
+                weaponCategory.listenTo(shareCollection, 'add remove', weaponCategory.render);
             }
             $(this.el).append(weaponCategory.el);
             if(categoryName === "Favorite"){
@@ -183,7 +236,7 @@ function   ($, _, Backbone, Enemies, Auras, WeaponModuleView, WeaponSortView, Se
         },
         render:function(){
             for(var key in this.options.list){
-                this.renderCategory(this.options.list[key], key, this.options.list["Favorite"]);
+                this.renderCategory(this.options.list[key], key, this.options.list["Favorite"], this.options.list["Linked"]);
             }
         }
     });

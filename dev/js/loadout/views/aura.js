@@ -40,6 +40,31 @@ function   ($, _, Backbone, Modules, Auras) {
         },
         
         descriptionPopup:function(e){
+            var currentRank = this.model.get('currentRank');
+            var weapon = this.options.weaponView.model;
+            this.model.set('currentRank', 0);
+            var modPercentages = weapon.getCalculatedModPercentages();
+            var weaponResultZeroMod = weapon.getDps(modPercentages, "");
+            this.model.set('currentRank', 5);
+            modPercentages = weapon.getCalculatedModPercentages();
+            var weaponResultOneMod = weapon.getDps(modPercentages, "");
+            this.model.set('currentRank', this.model.get('maxRanks'));
+            modPercentages = weapon.getCalculatedModPercentages();
+            var weaponResultMaxMod = weapon.getDps(modPercentages, "");
+            this.model.set('currentRank', currentRank);
+            var modElement = this.$el.find(".popup");
+            var onedps = (weaponResultOneMod.dps - weaponResultZeroMod.dps).toFixed(0);
+            if (onedps >= 0) {
+                onedps = "+" + onedps;
+            }
+            var oneapdps = (weaponResultOneMod.apdps - weaponResultZeroMod.apdps).toFixed(0);
+            var maxdps = (weaponResultMaxMod.dps - weaponResultZeroMod.dps).toFixed(0);
+            if (maxdps >= 0) {
+                maxdps = "+" + maxdps;
+            }
+            var maxapdps = (weaponResultMaxMod.apdps - weaponResultZeroMod.apdps).toFixed(0);
+            modElement.children(".totalAuraDps").html("<br>Total DPS (1): " + onedps + "/" + oneapdps);
+            modElement.children(".totalAuraDps").append("<br>Total DPS (5): " + maxdps + "/" + maxapdps);
             this.$el.find(".popup").toggleClass("hidden");
         },
         render:function(){
