@@ -45,19 +45,21 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['damageBreakdown']['Electrical'] = 0;
             result['damageBreakdown']['Freeze'] = 0;
             var damage = 0;
+            var rifleAmp = 0;
+            // Rifle amp
+            if((this.get('weaponType') === "rifle") || (this.get('weaponType') === "sniper") || (this.get('weaponType') === "bow")){
+                rifleAmp = this.get('auras').where({name:"Rifle Amp"})[0].getPercents()["Rifle Damage"];
+            }
             var baseDamage = this.get('damage');
             var corrosiveProjection = this.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
 
-            // Add serration type mods
-            baseDamage = baseDamage * (100 + module_types['Damage']) / 100;
+            // Add serration type mods and rifle amp
+            baseDamage = baseDamage * (100 + module_types['Damage'] + rifleAmp) / 100;
             
             // Add faction damage mods, bane, cleanse, expel
             baseDamage = baseDamage * (100 + module_types['Faction Damage']) / 100;
             
-            // Rifle amp
-            if((this.get('weaponType') === "rifle") || (this.get('weaponType') === "sniper") || (this.get('weaponType') === "bow")){
-                baseDamage *= (100 + this.get('auras').where({name:"Rifle Amp"})[0].getPercents()["Rifle Damage"]) / 100;
-            }
+            
             damage = baseDamage;
 
             // Add crit
@@ -152,6 +154,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             return result;
         },
         updateModuleDps:function(){
+            
             // Used after updating module stats (and weapon init) to re-calculate how much
             // one mod level gives in DPS
             var infestedCharger = new Enemies.InfestedCharger();
@@ -199,7 +202,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                     diffDps =  newDps - baseDps;
                     diffApDps = newApDps - baseApDps;
                     module.decreaseModlevel();
-                } 
+                }
                 module.set('moduleDpsDifference', diffDps);
                 module.set('moduleArmorPiercingDpsDifference', diffApDps);
                 if (module.get('currentRank') > 0){
@@ -230,13 +233,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                     diffDps =  newDps - baseDps;
                     diffApDps = newApDps - baseApDps;
                     aura.decreaseModlevel();
-                } 
+                }
                 aura.set('moduleDpsDifference', diffDps);
                 aura.set('moduleArmorPiercingDpsDifference', diffApDps);
             });
 
             weapon.set('activeModCount', activeModCount);
             weapon.set('activeModPoints', activeModPoints);
+            
         },
         getSimpleString:function(){
             // Used in cookies to remember weapons/mods in favorites
@@ -312,7 +316,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             specialDamageCalculations:function(damageBreakdown){
                var damage = {};
                for (var key in damageBreakdown){
-                    damage[key] = damageBreakdown[key] * 0.75;
+                    damage[key] = damageBreakdown[key] * 0.75 * 4;
                 }
                return damage;
             }
@@ -376,6 +380,48 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Magazine Capacity' : 30, 
             'Reload Speed' : 2.4, 
             'Crit Chance' : 0.025, 
+            'Crit Damage' : 1.5  
+           }
+        })),
+        
+        new (Ballistica = Weapon.extend({
+           initialize:function(){
+             //console.log("Bolto init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Ballistica (burst)",
+            masteryRank:0,
+            damageType:"Physics Impact",
+            prettyDamageType:"Physics Impact",
+            damage : 25, 
+            'Fire Rate' : 3.3, 
+            'Magazine Capacity' : 16, 
+            'Reload Speed' : 2.0, 
+            'Crit Chance' : 0.025, 
+            'Crit Damage' : 1.5  
+           }
+        })),
+        
+        new (Ballistica = Weapon.extend({
+           initialize:function(){
+             //console.log("Bolto init!");
+             this.set('modules', Modules.getNewPistolModCollection('crit'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Ballistica (charge)",
+            masteryRank:0,
+            damageType:"Physics Impact",
+            prettyDamageType:"Physics Impact",
+            damage : 100, 
+            'Fire Rate' : 0.769, // (1 / 1.3), 1 sec charge, + 0.3 sec (1/3.3  = 0.3) between shots
+            'Magazine Capacity' : 16, 
+            'Reload Speed' : 2.0, 
+            'Crit Chance' : 0.15, 
             'Crit Damage' : 1.5  
            }
         })),
@@ -1483,7 +1529,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
         // Bows
         //
-
+        
         new (Dread = Weapon.extend({
            initialize:function(){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
@@ -1496,12 +1542,33 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:0,
             damageType:"Blade",
             prettyDamageType:"Blade",
-            damage : 150, 
+            damage : 60, 
             'Fire Rate' : 1.0,
             'Magazine Capacity' : 1,
             'Reload Speed' : 1.0,
             'Crit Chance' : 0.10,
-            'Crit Damage' : 1.5
+            'Crit Damage' : 2.0
+           }
+        })),
+
+        new (Dread = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            charge:true,
+            weaponType:"bow", 
+            name : "Dread (charge)",
+            masteryRank:0,
+            damageType:"Blade",
+            prettyDamageType:"Blade",
+            damage : 150, 
+            'Fire Rate' : 0.5,
+            'Magazine Capacity' : 1,
+            'Reload Speed' : 1.0,
+            'Crit Chance' : 0.20,
+            'Crit Damage' : 2.0
            }
         })),
 
@@ -1517,8 +1584,29 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:4,
             damageType:"Serrated Blade",
             prettyDamageType:"Serrated Blade",
-            damage : 125, 
-            'Fire Rate' : 2.0,
+            damage : 50, 
+            'Fire Rate' : 2.5,
+            'Magazine Capacity' : 20,
+            'Reload Speed' : 2.0,
+            'Crit Chance' : 0.025,
+            'Crit Damage' : 1.5
+           }
+        })),
+        
+        new (Miter = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection('elemental'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            charge:true,
+            weaponType:"bow", 
+            name : "Miter (charge)",
+            masteryRank:4,
+            damageType:"Serrated Blade",
+            prettyDamageType:"Serrated Blade",
+            damage : 150, 
+            'Fire Rate' : 0.41666,
             'Magazine Capacity' : 20,
             'Reload Speed' : 2.0,
             'Crit Chance' : 0.0,
@@ -1538,8 +1626,29 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:0,
             damageType:"Physics Impact",
             prettyDamageType:"Physics Impact",
-            damage : 100, 
+            damage : 45, 
             'Fire Rate' : 1.0,
+            'Magazine Capacity' : 1,
+            'Reload Speed' : 1.0,
+            'Crit Chance' : 0.10,
+            'Crit Damage' : 1.5
+           }
+        })),
+        
+        new (Paris = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            charge:true,
+            weaponType:"bow", 
+            name : "Paris (charge)",
+            masteryRank:0,
+            damageType:"Physics Impact",
+            prettyDamageType:"Physics Impact",
+            damage : 100, 
+            'Fire Rate' : 0.5,
             'Magazine Capacity' : 1,
             'Reload Speed' : 1.0,
             'Crit Chance' : 0.20,
@@ -1559,14 +1668,35 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:4,
             damageType:"Physics Impact",
             prettyDamageType:"Physics Impact",
-            damage : 150, 
+            damage : 65, 
             'Fire Rate' : 1.0,
+            'Magazine Capacity' : 1,
+            'Reload Speed' : 1.0,
+            'Crit Chance' : 0.10,
+            'Crit Damage' : 1.5
+           }
+        })),
+        
+        new (ParisPrime = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            charge:true,
+            weaponType:"bow", 
+            name : "Paris Prime (charge)",
+            masteryRank:4,
+            damageType:"Physics Impact",
+            prettyDamageType:"Physics Impact",
+            damage : 150, 
+            'Fire Rate' : 0.5,
             'Magazine Capacity' : 1,
             'Reload Speed' : 1.0,
             'Crit Chance' : 0.20,
             'Crit Damage' : 1.5
            }
-        }))   
+        }))
     ]);
     return this;
 });

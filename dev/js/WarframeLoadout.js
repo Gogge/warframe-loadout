@@ -147,7 +147,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
                                 weapon.get('modules').models[index].setModlevel(parseInt(mod,36));
                             }
                         });
-
+                        weapon.updateModuleDps();
                         sharedList.add(weapon);
                     }
                 }
@@ -177,6 +177,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     
 
     $(document).ready(function() {
+        getWeaponFromSharedUrl(true);
         //
         // Options
         //
@@ -206,6 +207,6 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
             $(".weaponTypeHeader." + hidden_options[i]).addClass("hidden");
         }
         
-        getWeaponFromSharedUrl(true);
+        
     });
 });
