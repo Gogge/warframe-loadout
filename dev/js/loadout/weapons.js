@@ -446,6 +446,26 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Crit Damage' : 1.5  
            }
         })),
+        
+        new (Brakk = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewPistolModCollection('continous'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Brakk",
+            masteryRank:0,
+            damageType:"Bullet",
+            prettyDamageType:"Bullet",
+            damage : 150, 
+            'Fire Rate' : 5, 
+            'Magazine Capacity' : 5, 
+            'Reload Speed' : 1, 
+            'Crit Chance' : 0.15, 
+            'Crit Damage' : 2.0  
+           }
+        })),
 
         new (Bronco = Weapon.extend({
            initialize:function(){
@@ -1503,6 +1523,27 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Reload Speed' : 2.0,
             'Crit Chance' : 0.20,
             'Crit Damage' : 1.5
+           }
+        })),
+        
+        new (Vectis = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection('vectis'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            charge:true,
+            weaponType:"sniper", 
+            name : "Vectis",
+            masteryRank:7,
+            damageType:"Armor Piercing",
+            prettyDamageType:"Armor Piercing",
+            damage : 175, 
+            'Fire Rate' : 1.5,
+            'Magazine Capacity' : 1,
+            'Reload Speed' : 1.0,
+            'Crit Chance' : 0.25,
+            'Crit Damage' : 2.0
            }
         })),
 

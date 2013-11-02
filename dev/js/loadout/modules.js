@@ -480,7 +480,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Stunning Speed", 
-            types:{'Reload Speed':10}, 
+            types:{'Reload Speed':10, 'Stun Chance':2.5}, 
             maxRanks:4, 
             currentRank:4,
             baseCost:5
@@ -1007,6 +1007,30 @@ function   ($, _, Backbone) {
                         new Stormbringer({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber(),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
+               break;
+            case 'vectis':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot(),
                         new Bane(),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber(),
