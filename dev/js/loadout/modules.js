@@ -190,7 +190,7 @@ function   ($, _, Backbone) {
             types:{'Damage':15}, 
             maxRanks:11, 
             currentRank:11,
-            baseCost:4
+            baseCost:3
         }
     });
     
@@ -286,7 +286,33 @@ function   ($, _, Backbone) {
             types:{'Magazine Capacity':5, 'Fire':15}, 
             maxRanks:4, 
             currentRank:4,
-            baseCost:6
+            baseCost:5
+        }
+    });
+    
+    // Sniper Rifle
+    
+    ChargedChamber = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Charged Chamber", 
+            types:{'First Shot Damage Bonus':10}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:5
+        }
+    });
+    
+    PrimedChamber = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Primed Chamber", 
+            types:{'First Shot Damage Bonus':25}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:3
         }
     });
 
@@ -1067,6 +1093,113 @@ function   ($, _, Backbone) {
         return mods;
     };
     
+    getNewSniperModCollection = function(buildType){
+        var mods = {};
+        switch(buildType){
+            case 'elemental':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new Wildfire(),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new ChargedChamber({currentRank:0}),
+                        new PrimedChamber({currentRank:0})
+                    ]);
+               break;
+            case 'crit':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot(),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new ChargedChamber({currentRank:0}),
+                        new PrimedChamber({currentRank:0})
+                     ]);
+                break;
+            case 'vectis':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot(),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new ChargedChamber(),
+                        new PrimedChamber({currentRank:0})
+                    ]);
+               break;
+            default:
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit(), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike(), 
+                        new VitalSense(), 
+                        new Hellfire({currentRank:0}), 
+                        new CryoRounds({currentRank:0}), 
+                        new Stormbringer({currentRank:0}), 
+                        new Wildfire({currentRank:0}),
+                        new HammerShot(),
+                        new Bane(),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                    ]);
+        }
+        return mods;
+    };
     getNewShotgunModCollection = function(buildType){
         var mods = {};
         switch(buildType){

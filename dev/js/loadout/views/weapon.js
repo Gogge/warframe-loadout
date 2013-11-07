@@ -118,7 +118,7 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
                 var module = modules.models[i];
                 var moduleview = this.renderModule(module);
                 mod_quartet.append(moduleview.el);
-                if (((i+1)%7 === 0) && (i+1 !== l)) {
+                if (((i+1)%8 === 0) && (i+1 !== l)) {
                     $(this.el).find(".modules").append(mod_quartet);
                     mod_quartet = $('<div/>', {
                         class:'quart'

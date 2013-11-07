@@ -19,7 +19,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            return {};
        },
        getCalculatedModPercentages:function(){
-           var module_types = {'Damage':0, 'Faction Damage':0, 'Armor Piercing':0, 'Fire':0, 'Electrical':0, 'Freeze':0, 'Crit Chance':0, 'Crit Damage':0, 'Multishot':0, 'Fire Rate':0, 'Reload Speed':0, 'Magazine Capacity':0};
+           var module_types = {'Damage':0, 'Faction Damage':0, 'First Shot Damage Bonus':0, 'Armor Piercing':0, 'Fire':0, 'Electrical':0, 'Freeze':0, 'Crit Chance':0, 'Crit Damage':0, 'Multishot':0, 'Fire Rate':0, 'Reload Speed':0, 'Magazine Capacity':0};
            this.get('modules').each(function(module){
                var calculated_mods = module.getPercents();
                for(var key in calculated_mods){
@@ -46,12 +46,38 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['damageBreakdown']['Freeze'] = 0;
             var damage = 0;
             var rifleAmp = 0;
+            
+            //
+            // Fire rate and magazine capacity
+            //
+            
+            var fireRate = 1.0;
+            if (this.get('continous')){
+                fireRate = this.get('Fire Rate');
+            } else {
+                fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
+            }
+            // Note that the "'Reload Speed'" attribute is really reload time
+            var reloadSpeed = this.get('Reload Speed') / ((100 + module_types['Reload Speed']) / 100);
+            var magazineCapacity = Math.round(this.get('Magazine Capacity') * (100 + module_types['Magazine Capacity']) / 100);
+            
+            // 
+            // Auras 
+            //
+
             // Rifle amp
             if((this.get('weaponType') === "rifle") || (this.get('weaponType') === "sniper") || (this.get('weaponType') === "bow")){
                 rifleAmp = this.get('auras').where({name:"Rifle Amp"})[0].getPercents()["Rifle Damage"];
             }
-            var baseDamage = this.get('damage');
+            // Corrosive Projection
+            // Note that the calculations are handled in the enemy object, this value is just passed to the function.
             var corrosiveProjection = this.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            
+            //
+            // Base damage
+            //
+            
+            var baseDamage = this.get('damage');
 
             // Add serration type mods and rifle amp
             baseDamage = baseDamage * (100 + module_types['Damage'] + rifleAmp) / 100;
@@ -59,10 +85,17 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             // Add faction damage mods, bane, cleanse, expel
             baseDamage = baseDamage * (100 + module_types['Faction Damage']) / 100;
             
+            // Add charged/primed chamber if used (only sniper rifles)
+            // We divide the damage bonus with the magazine capacity, if you have 1 shot in the mag you get 100% bonus, two shots 50%, etc.
+            // as a way to average the bonus over serveral shots. More shots in the magazine diminishes the benefit of the mods.
+            baseDamage = baseDamage * (100 + module_types['First Shot Damage Bonus'] / magazineCapacity) / 100 ;
             
             damage = baseDamage;
 
-            // Add crit
+            //
+            // Crit
+            //
+            
             var statCritChance = Math.min(this.get('Crit Chance') * (100 + module_types['Crit Chance']) / 100, 1.0);
             // The critical damage calculations are for total damage (includes the base 100%), so we exclude that part to get only the critical damage portion
             var statCritDamage = this.get('Crit Damage') * (100 + module_types['Crit Damage']) / 100;
@@ -70,6 +103,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             damage += criticalDamage;
 
             result['damageBreakdown'][damageType] = damage;
+
+            //
+            // Elemental type mods
+            //
 
             // Add elemental type mods
             var armorPiercing = damage * module_types['Armor Piercing'] / 100;
@@ -84,17 +121,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             var basePlusElementalDamage = damage + armorPiercing + fire + electrical + freeze;
             damage = basePlusElementalDamage;
             
-
-            //Add others
-            var fireRate = 1.0;
-            if (this.get('continous')){
-                fireRate = this.get('Fire Rate');
-            } else {
-                fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
-            }
-            // Note that the "'Reload Speed'" attribute is really reload time
-            var reloadSpeed = this.get('Reload Speed') / ((100 + module_types['Reload Speed']) / 100);
-            var magazineCapacity = Math.round(this.get('Magazine Capacity') * (100 + module_types['Magazine Capacity']) / 100);
+            //
+            // Other damage
+            //
 
             // The special damage is the weapon's extra custom damage function
             // eg. Acrid's 75% extra damage poison dot
@@ -104,7 +133,6 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 if(!result['damageBreakdown'][key]){result['damageBreakdown'][key] = 0;}
                 result['damageBreakdown'][key] += specialDamage[key];
             };
-            
             
             var totalDamage = 0;
             result['dpsBreakdown'] = {};
@@ -121,6 +149,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
                 totalDamage += result['damageBreakdown'][key];
             }
+            
+            //
+            // Sums and DPS
+            //
             
             var dps = (totalDamage * magazineCapacity) / (magazineCapacity / fireRate + reloadSpeed);
             var burst = totalDamage * fireRate;
@@ -1467,7 +1499,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
         new (Lanka = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.set('modules', Modules.getNewSniperModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1488,7 +1520,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (Snipetron = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.set('modules', Modules.getNewSniperModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1508,7 +1540,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (SnipetronVandal = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.set('modules', Modules.getNewSniperModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1528,7 +1560,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         
         new (Vectis = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('vectis'));
+             this.set('modules', Modules.getNewSniperModCollection('vectis'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
@@ -1549,7 +1581,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
         new (Vulkar = Weapon.extend({
            initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.set('modules', Modules.getNewSniperModCollection('crit'));
              this.constructor.__super__.initialize.apply(this);
            },
            defaults:{
