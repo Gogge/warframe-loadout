@@ -48,6 +48,9 @@ input.shareText{
     background:none;
     border:none;
 }
+div.notes{
+    font-size:11px;
+}
 div.links{
     text-align: center;
     padding-bottom:5px;
@@ -181,6 +184,14 @@ div.fav.add{
 span.name.fav{
     color:#ffffcc;
 }
+table.enemies{
+}
+span.green{
+    color:greenyellow;
+}
+span.red{
+    color:red;
+}
 table.stats{
     font-size: 11px;
     border:0px;
@@ -192,7 +203,7 @@ table.damage{
     font-size: 11px;
     border:0px;
     padding:0px 0px 0px 0px;
-    margin-bottom:10px;
+    /*margin-bottom:10px;*/
     width:120px;
 }
 td{
@@ -213,7 +224,7 @@ table.scaling{
     padding:0px 0px 0px 0px;
     margin-bottom:10px;
     margin-right:10px;
-    width:160px;
+    width:250px;
 }
 span.scaling{
     font-size:11px;
@@ -450,4 +461,12 @@ span.damageDiff{
 .popup.dps{
     left:130px;
     top:-15px;
+}
+.popup.stats{
+    left:160px;
+    top:-15px;
+}
+.popup.enemies{
+    left:0px;
+    top:10px;
 }

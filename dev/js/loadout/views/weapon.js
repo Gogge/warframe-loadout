@@ -15,11 +15,36 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             "click div.share.rem": "removeShare",
             "click div.share.pop": "sharePopup",
             "mouseenter table.damage": "descriptionPopup",
-            "mouseleave table.damage": "descriptionPopup"
+            "mouseleave table.damage": "descriptionPopup",
+            "mouseenter table.stats": "statsPopup",
+            "mouseleave table.stats": "statsPopup",
+            "mouseenter th.ancient": "ancientPopup",
+            "mouseleave th.ancient": "ancientPopup",
+            "mouseenter th.napalm": "napalmPopup",
+            "mouseleave th.napalm": "napalmPopup",
+            "mouseenter th.tech": "techPopup",
+            "mouseleave th.tech": "techPopup",
+            "mouseenter th.moa": "moaPopup",
+            "mouseleave th.moa": "moaPopup"
             //"click span.name": "toggleMinimized"
         },
         descriptionPopup:function(e){
             this.$el.find(".popup.dps").toggleClass("hidden");
+        },
+        statsPopup:function(e){
+            this.$el.find(".popup.stats").toggleClass("hidden");
+        },
+        ancientPopup:function(e){
+            this.$el.find(".popup.ancient").toggleClass("hidden");
+        },
+        napalmPopup:function(e){
+            this.$el.find(".popup.napalm").toggleClass("hidden");
+        },
+        techPopup:function(e){
+            this.$el.find(".popup.tech").toggleClass("hidden");
+        },
+        moaPopup:function(e){
+            this.$el.find(".popup.moa").toggleClass("hidden");
         },
         toggleMinimized:function(){
             this.$el.toggleClass("minimized");
@@ -118,7 +143,7 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
                 var module = modules.models[i];
                 var moduleview = this.renderModule(module);
                 mod_quartet.append(moduleview.el);
-                if (((i+1)%8 === 0) && (i+1 !== l)) {
+                if (((i+1)%9 === 0) && (i+1 !== l)) {
                     $(this.el).find(".modules").append(mod_quartet);
                     mod_quartet = $('<div/>', {
                         class:'quart'
@@ -183,12 +208,16 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             var weaponHeaderTemplate = _.template($("#weaponHeaderTemplate").html());
             $(this.el).html(weaponHeaderTemplate({weaponType:this.options.categoryName}));
             
+            // Note to self: update the sort options in weapons.js
             var sortList = new WeaponSortView.SortCollection([
                 new WeaponSortView.SortType({name:"Name", option:"name"}),
                 new WeaponSortView.SortType({name:"DPS", option:"dps"}),
-                new WeaponSortView.SortType({name:"AP DPS", option:"apdps"}),
+                //new WeaponSortView.SortType({name:"AP DPS", option:"apdps"}),
                 new WeaponSortView.SortType({name:"Shot", option:"shot"}),
-                new WeaponSortView.SortType({name:"Burst", option:"burst"}),
+                new WeaponSortView.SortType({name:"Ancient", option:"ancientDps"}),
+                new WeaponSortView.SortType({name:"Napalm", option:"napalmDps"}),
+                new WeaponSortView.SortType({name:"Tech", option:"techDps"}),
+                new WeaponSortView.SortType({name:"MOA", option:"moaDps"}),
             ]);
             var sortListView = new WeaponSortView.SortListView({collection:sortList, weaponCategory:this.collection, weaponCategoryView:this});
             sortListView.render();

@@ -1,6 +1,10 @@
 define(['jquery', 'underscore', 'backbone'],
 function   ($, _, Backbone) {
     
+    //
+    // The actual list of sorteable items is in views/weapon.js
+    //
+    
     SortType = Backbone.Model.extend({
         initialize:function(){
         },

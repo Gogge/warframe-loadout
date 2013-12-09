@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout v0.1e
+ * Warframe Loadout v0.2b
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license
@@ -123,6 +123,9 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         addWeaponsFromCookies($.cookie('linked'), sharedList);
     };
     
+    //
+    // Create new weapon/module/auras from shared URL's
+    //
     getWeaponFromSharedUrl = function(pageload){
         var url = window.location.href;
         if(url.indexOf('#') !== -1){
@@ -160,6 +163,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         }
     };
     
+    // Update weapon list when the hash-tag changes
     $(window).on('hashchange', function() {
         getWeaponFromSharedUrl(false);
     });
