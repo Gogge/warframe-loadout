@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout v0.2b
+ * Warframe Loadout 11.5.4 revision 3
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license
@@ -38,6 +38,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         new Option({name:"Shotguns", option:"shotgun"}), 
         new Option({name:"Sniper Rifles", option:"sniper"}), 
         new Option({name:"Bows/Other", option:"bow"}),
+        new Option({name:"Sentinel", option:"sentinel"}),
         new Option({name:"Linked", option:"linked"}),
         new Option({name:"Favorites", option:"favorite"})
     ]);
@@ -70,6 +71,12 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     var bowArray = Weapons.weaponList.where({weaponType:"bow"});
     for(var i = 0;i<bowArray.length;i++){
         bowList.add(new bowArray[i].constructor());
+    };
+    
+    var sentinelList = new Weapons.WeaponCollection([]);
+    var sentinelArray = Weapons.weaponList.where({weaponType:"sentinel"});
+    for(var i = 0;i<sentinelArray.length;i++){
+        sentinelList.add(new sentinelArray[i].constructor());
     };
     
     //
@@ -175,6 +182,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
             "Shotgun":shotgunList, 
             "Sniper":sniperList, 
             "Bow":bowList,
+            "Sentinel":sentinelList,
             "Linked":sharedList
     };
     
@@ -210,7 +218,6 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
             $(".mark." + hidden_options[i].toLowerCase()).addClass("faded");
             $(".weaponTypeHeader." + hidden_options[i]).addClass("hidden");
         }
-        
         
     });
 });

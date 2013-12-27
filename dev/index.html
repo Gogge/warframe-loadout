@@ -9,7 +9,7 @@
     </head>
     <body>
         <div class="links"><div class="cell link"><a href="http://www.warframe.com">Warframe.com</a></div><div class="cell link"><a href="http://www.reddit.com/r/warframe">reddit r/Warframe</a></div><div class="cell link"><a href="http://www.reddit.com/r/Warframe/comments/1sdx2e/dpsframe_is_now_updated_for_damage_20/">(new) discussion thread on reddit</a></div></div>
-        <div class="notes">Updated for Damage 2.0!<br></div>
+        <div class="notes">Updated for Damage 2.0! (Update 11.5.4) dpsframe 11.5.4 rev. 3 <a href="https://forums.warframe.com/index.php?/topic/118754-a-web-based-dps-tool/page-2#entry1782591">changelog</a><br></div>
         <div id="optionsContainer" class="box"></div>
         <div id="weaponContainer" class="weapon"></div>
         <script type="text/template" id="weaponTemplate">
@@ -116,7 +116,7 @@
                         <%var stat_value = result['stats'][key] %>
                         <%if(stat_name === "Crit Damage") {
                             stat_value = (stat_value *= 100).toFixed(0) + "%";
-                          } else if(stat_name === "Crit Chance"){
+                          } else if((stat_name === "Crit Chance") || (stat_name === "Status Chance")){
                             stat_value = (stat_value *= 100).toFixed(2) + "%";
                           } else {
                             stat_value = stat_value.toFixed(2);
@@ -138,7 +138,7 @@
                             <tbody>
                             <%for(var key in result['baseDamageStats']){%>
                                 <%var stat_name = key %>
-                                <%var stat_value = result['baseDamageStats'][key].toFixed(1) %>
+                                <%var stat_value = result['baseDamageStats'][key].toFixed(2) %>
                                 <%if(stat_value > 0) {%>
                                     <tr>
                                         <td><%= stat_name %></td><td class="right"><%= stat_value%></td>
@@ -156,7 +156,9 @@
                                     stat_value = (stat_value *= 100).toFixed(0) + "%";
                                   } else if(stat_name === "Crit Chance"){
                                     stat_value = (stat_value *= 100).toFixed(2) + "%";
-                                  } else {
+                                  } else if(stat_name === "Status Chance"){
+                                    stat_value = stat_value.toFixed(2) + "%";
+                                  }else {
                                     stat_value = stat_value.toFixed(2);
                                   }%>
                                 <tr>
@@ -202,7 +204,7 @@
                             <table class="enemies">
                             <thead>
                             <tr>
-                                <th>Ancient</th><th class="right">Infested</th>
+                                <th>Ancient</th><th class="right">Fossilized</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -210,7 +212,7 @@
                                 <tr>
                                     <td><%= key %></td>
                                     <% if(ancientMods[key]) {%>
-                                        <td class="right"><span class="<%= (ancientMods[key] < 1) ? "red" : "green" %>"><%= ancientMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (ancientMods[key] < 0) ? "red" : "green" %>"><%= ancientMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
@@ -225,7 +227,7 @@
                             <table class="enemies">
                             <thead>
                             <tr>
-                                <th>Napalm</th><th class="right">Armor</th><th class="right">Flesh</th>
+                                <th>Napalm</th><th class="right">Alloy</th><th class="right">Cloned</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -233,12 +235,12 @@
                                 <tr>
                                     <td><%= key %></td>
                                     <% if(napalmArmorMods[key]) {%>
-                                        <td class="right"><span class="<%= (napalmArmorMods[key] > 1) ? "red" : "green" %>"><%= napalmArmorMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (napalmArmorMods[key] < 0) ? "red" : "green" %>"><%= napalmArmorMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
                                     <% if(napalmHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (napalmHealthMods[key] < 1) ? "red" : "green" %>"><%= napalmHealthMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (napalmHealthMods[key] < 0) ? "red" : "green" %>"><%= napalmHealthMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
@@ -246,7 +248,7 @@
                             <%}%>
                            </tbody>
                            </table>
-                           <span>Armor Note:<br>A 0.25 factor means 50%<br>reduction becomes a<br>12.5% reduction.</span>
+                           <span>Armor Note:<br>In 11.3.3 a 0.75 factor<br> means 100 armor drops<br>to 25 (armor * 1-0.75)<br> and it also gives a 75% <br>damage factor.</span>
                         </div>
                     </div>
                     <div class="popupContainer">
@@ -254,7 +256,7 @@
                             <table class="enemies">
                             <thead>
                             <tr>
-                                <th>Tech</th><th class="right">Shields</th><th class="right">Flesh</th>
+                                <th>Tech</th><th class="right">Proto</th><th class="right">Flesh</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -262,12 +264,12 @@
                                 <tr>
                                     <td><%= key %></td>
                                     <% if(techShieldMods[key]) {%>
-                                        <td class="right"><span class="<%= (techShieldMods[key] < 1) ? "red" : "green" %>"><%= techShieldMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (techShieldMods[key] < 0) ? "red" : "green" %>"><%= techShieldMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
                                     <% if(techHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (techHealthMods[key] < 1) ? "red" : "green" %>"><%= techHealthMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (techHealthMods[key] < 0) ? "red" : "green" %>"><%= techHealthMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
@@ -282,7 +284,7 @@
                             <table class="enemies">
                             <thead>
                             <tr>
-                                <th>Moa</th><th class="right">Shield</th><th class="right">Robotics</th>
+                                <th>Moa</th><th class="right">Shield</th><th class="right">Robotic</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -290,12 +292,12 @@
                                 <tr>
                                     <td><%= key %></td>
                                     <% if(moaShieldMods[key]) {%>
-                                        <td class="right"><span class="<%= (moaShieldMods[key] < 1) ? "red" : "green" %>"><%= moaShieldMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (moaShieldMods[key] < 0) ? "red" : "green" %>"><%= moaShieldMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>
                                     <% if(moaHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (moaHealthMods[key] < 1) ? "red" : "green" %>"><%= moaHealthMods[key].toFixed(2)%></span></td>
+                                        <td class="right"><span class="<%= (moaHealthMods[key] < 0) ? "red" : "green" %>"><%= moaHealthMods[key].toFixed(2)%></span></td>
                                     <%} else {%>
                                         <td class="right">-</td>
                                     <%}%>

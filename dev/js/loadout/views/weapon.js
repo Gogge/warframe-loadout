@@ -212,6 +212,7 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             var sortList = new WeaponSortView.SortCollection([
                 new WeaponSortView.SortType({name:"Name", option:"name"}),
                 new WeaponSortView.SortType({name:"DPS", option:"dps"}),
+                new WeaponSortView.SortType({name:"Burst", option:"burst"}),
                 //new WeaponSortView.SortType({name:"AP DPS", option:"apdps"}),
                 new WeaponSortView.SortType({name:"Shot", option:"shot"}),
                 new WeaponSortView.SortType({name:"Ancient", option:"ancientDps"}),

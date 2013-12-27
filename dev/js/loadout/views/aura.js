@@ -1,5 +1,5 @@
-define(['jquery', 'underscore', 'backbone', 'loadout/modules', 'loadout/auras'],
-function   ($, _, Backbone, Modules, Auras) {
+define(['jquery', 'underscore', 'backbone', 'loadout/modules', 'loadout/auras', 'loadout/enemies'],
+function   ($, _, Backbone, Modules, Auras, Enemies) {
     
     AuraView = Backbone.View.extend({
         tagname:"div",
@@ -42,29 +42,88 @@ function   ($, _, Backbone, Modules, Auras) {
         descriptionPopup:function(e){
             var currentRank = this.model.get('currentRank');
             var weapon = this.options.weaponView.model;
+            var ancientDisruptor = new Enemies.AncientDisruptor();
+            var grineerNapalm = new Enemies.GrineerNapalm();
+            var corpusTech = new Enemies.CorpusTech();
+            var corpusMoa = new Enemies.CorpusShockwaveMoa();   
+            
             this.model.set('currentRank', 0);
             var modPercentages = weapon.getCalculatedModPercentages();
             var weaponResultZeroMod = weapon.getDps(modPercentages, "");
+            var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            var ancientAltsZeroMod = ancientDisruptor.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var napalmAltsZeroMod = grineerNapalm.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var techAltsZeroMod = corpusTech.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var moaAltsZeroMod = corpusMoa.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            
             this.model.set('currentRank', 5);
             modPercentages = weapon.getCalculatedModPercentages();
             var weaponResultOneMod = weapon.getDps(modPercentages, "");
+            corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            var ancientAltsOneMod = ancientDisruptor.getDamageTaken(weaponResultOneMod, 25, corrosiveProjection);
+            var napalmAltsOneMod = grineerNapalm.getDamageTaken(weaponResultOneMod, 25, corrosiveProjection);
+            var techAltsOneMod = corpusTech.getDamageTaken(weaponResultOneMod, 25, corrosiveProjection);
+            var moaAltsOneMod = corpusMoa.getDamageTaken(weaponResultOneMod, 25, corrosiveProjection);
+            
             this.model.set('currentRank', this.model.get('maxRanks'));
             modPercentages = weapon.getCalculatedModPercentages();
             var weaponResultMaxMod = weapon.getDps(modPercentages, "");
+            corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            var ancientAltsMaxMod = ancientDisruptor.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var napalmAltsMaxMod = grineerNapalm.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var techAltsMaxMod = corpusTech.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var moaAltsMaxMod = corpusMoa.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            
             this.model.set('currentRank', currentRank);
             var modElement = this.$el.find(".popup");
-            var onedps = (weaponResultOneMod.dps - weaponResultZeroMod.dps).toFixed(0);
-            if (onedps >= 0) {
-                onedps = "+" + onedps;
+
+            modElement.children(".totalAuraDps").html("<br>Added DPS at max rank one person:");   
+
+            var zeroKeys = Object.keys(ancientAltsZeroMod);
+            var oneKeys = Object.keys(ancientAltsOneMod);
+            
+            var table = '<table class="scaling"><thead><tr><th>Type</th><th class="right">Ancient</th><th class="right">Napalm</th><th class="right">Tech</th><th class="right">MOA</th></tr></thead><tbody>';
+            for(var i=0; i<oneKeys.length; i++){
+                var zeroIndex = 0;
+                if(zeroKeys.length === oneKeys.length){
+                    zeroIndex = i;
+                }
+                var ancientDps = ancientAltsOneMod[oneKeys[i]]['DPS'] - ancientAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var napalmDps = napalmAltsOneMod[oneKeys[i]]['DPS'] - napalmAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var techDps = techAltsOneMod[oneKeys[i]]['DPS'] - techAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var moaDps = moaAltsOneMod[oneKeys[i]]['DPS'] - moaAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                table += '<tr><td>';
+                table += oneKeys[i] + '</td><td class="right">' + ancientDps.toFixed(0)+ ' </td><td class="right">' + napalmDps.toFixed(0) + '</td><td class="right">' + techDps.toFixed(0) + '</td>' + '</td><td class="right">' + moaDps.toFixed(0) + '</td>';
+                table += '</tr>';
             }
-            var oneapdps = (weaponResultOneMod.apdps - weaponResultZeroMod.apdps).toFixed(0);
-            var maxdps = (weaponResultMaxMod.dps - weaponResultZeroMod.dps).toFixed(0);
-            if (maxdps >= 0) {
-                maxdps = "+" + maxdps;
+            table += '</tbody></table>';
+            modElement.children(".totalAuraDps").append("<br>" + table);
+            
+            //
+            // Aura max ranked (all five have it maxed)
+            //
+            
+            modElement.children(".totalAuraDps").append("<br>Added DPS at max rank whole team:");
+
+            var maxKeys = Object.keys(ancientAltsMaxMod);
+            
+            table = '<table class="scaling"><thead><tr><th>Type</th><th class="right">Ancient</th><th class="right">Napalm</th><th class="right">Tech</th><th class="right">MOA</th></tr></thead><tbody>';
+            for(var i=0; i<maxKeys.length; i++){
+                var zeroIndex = 0;
+                if(zeroKeys.length === maxKeys.length){
+                    zeroIndex = i;
+                }
+                var ancientDps = ancientAltsMaxMod[maxKeys[i]]['DPS'] - ancientAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var napalmDps = napalmAltsMaxMod[maxKeys[i]]['DPS'] - napalmAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var techDps = techAltsMaxMod[maxKeys[i]]['DPS'] - techAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var moaDps = moaAltsMaxMod[maxKeys[i]]['DPS'] - moaAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                table += '<tr><td>';
+                table += maxKeys[i] + '</td><td class="right">' + ancientDps.toFixed(0)+ ' </td><td class="right">' + napalmDps.toFixed(0) + '</td><td class="right">' + techDps.toFixed(0) + '</td>' + '</td><td class="right">' + moaDps.toFixed(0) + '</td>';
+                table += '</tr>';
             }
-            var maxapdps = (weaponResultMaxMod.apdps - weaponResultZeroMod.apdps).toFixed(0);
-            modElement.children(".totalAuraDps").html("<br>Total DPS (1): " + onedps + "/" + oneapdps);
-            modElement.children(".totalAuraDps").append("<br>Total DPS (5): " + maxdps + "/" + maxapdps);
+            table += '</tbody></table>';
+            modElement.children(".totalAuraDps").append("<br>" + table);
+            
             this.$el.find(".popup").toggleClass("hidden");
         },
         render:function(){

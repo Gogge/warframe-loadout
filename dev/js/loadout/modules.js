@@ -113,7 +113,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Hammer Shot", 
-            types:{'Crit Damage':15}, 
+            types:{'Crit Damage':15, 'Status Chance':10}, 
             maxRanks:4, 
             currentRank:4,
             baseCost:5
@@ -561,6 +561,18 @@ function   ($, _, Backbone) {
         }
     });
     
+    RifleAptitude = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Rifle Aptitude", 
+            types:{'Status Chance':2.5}, 
+            maxRanks:6,
+            currentRank:6,
+            baseCost:3
+        }
+    });
+    
     SlipMagazine = Module.extend({
        initialize:function(){
         },
@@ -582,6 +594,18 @@ function   ($, _, Backbone) {
             maxRanks:4, 
             currentRank:4,
             baseCost:5
+        }
+    });
+    
+    SureShot = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Sure Shot", 
+            types:{'Status Chance':2.5}, 
+            maxRanks:6, 
+            currentRank:6,
+            baseCost:1
         }
     });
     
@@ -758,11 +782,11 @@ function   ($, _, Backbone) {
         }
     });
     
-    IncindiaryCoat = Module.extend({
+    IncendiaryCoat = Module.extend({
        initialize:function(){
         },
         defaults:{
-            name:"Incindiary Coat", 
+            name:"Incendiary Coat", 
             types:{'Fire':15}, 
             maxRanks:6, 
             currentRank:6,
@@ -800,6 +824,18 @@ function   ($, _, Backbone) {
         defaults:{
             name:"Shotgun Spazz", 
             types:{'Fire Rate':15}, 
+            maxRanks:6, 
+            currentRank:6,
+            baseCost:3
+        }
+    });
+    
+    ShotgunSavvy = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Shotgun Savvy", 
+            types:{'Status Chance':5}, 
             maxRanks:6, 
             currentRank:6,
             baseCost:3
@@ -881,6 +917,7 @@ function   ($, _, Backbone) {
                         new IceStorm(),
                         new PistolGambit({currentRank:0}),
                         new TargetCracker({currentRank:0}),
+                        new SureShot({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
@@ -907,6 +944,7 @@ function   ($, _, Backbone) {
                         new IceStorm({currentRank:0}),
                         new PistolGambit({currentRank:0}),
                         new TargetCracker({currentRank:0}),
+                        new SureShot({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
@@ -933,6 +971,7 @@ function   ($, _, Backbone) {
                         new IceStorm(),
                         new PistolGambit({currentRank:0}),
                         new TargetCracker({currentRank:0}),
+                        new SureShot({currentRank:0}),
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
@@ -965,6 +1004,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -992,6 +1032,7 @@ function   ($, _, Backbone) {
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1019,6 +1060,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1046,6 +1088,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber(),
                         new TaintedMag({currentRank:0}),
@@ -1073,6 +1116,7 @@ function   ($, _, Backbone) {
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1100,6 +1144,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot(),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber(),
                         new TaintedMag({currentRank:0}),
@@ -1127,6 +1172,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1146,7 +1192,7 @@ function   ($, _, Backbone) {
                         new Serration(), 
                         new SplitChamber(), 
                         new SpeedTrigger(),
-                        new PiercingHit(), 
+                        new PiercingHit({currentRank:0}), 
                         new SawtoothClip({currentRank:0}), 
                         new Rupture({currentRank:0}), 
                         new Shred({currentRank:0}), 
@@ -1157,10 +1203,11 @@ function   ($, _, Backbone) {
                         new Hellfire(), 
                         new CryoRounds(), 
                         new Stormbringer(),
-                        new InfectedClip({currentRank:0}),
+                        new InfectedClip(),
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane({currentRank:0}),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1175,7 +1222,7 @@ function   ($, _, Backbone) {
                         new Serration(), 
                         new SplitChamber(), 
                         new SpeedTrigger(),
-                        new PiercingHit(), 
+                        new PiercingHit({currentRank:0}), 
                         new SawtoothClip({currentRank:0}), 
                         new Rupture({currentRank:0}), 
                         new Shred({currentRank:0}), 
@@ -1184,12 +1231,13 @@ function   ($, _, Backbone) {
                         new PointStrike(), 
                         new VitalSense(), 
                         new Hellfire({currentRank:0}), 
-                        new CryoRounds({currentRank:0}), 
-                        new Stormbringer({currentRank:0}),
-                        new InfectedClip({currentRank:0}),
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new InfectedClip(),
                         new Wildfire({currentRank:0}),
-                        new HammerShot(),
-                        new Bane(),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1204,7 +1252,7 @@ function   ($, _, Backbone) {
                         new Serration(), 
                         new SplitChamber(), 
                         new SpeedTrigger({currentRank:0}),
-                        new PiercingHit(), 
+                        new PiercingHit({currentRank:0}), 
                         new SawtoothClip({currentRank:0}), 
                         new Rupture({currentRank:0}), 
                         new Shred({currentRank:0}), 
@@ -1213,12 +1261,13 @@ function   ($, _, Backbone) {
                         new PointStrike(), 
                         new VitalSense(), 
                         new Hellfire({currentRank:0}), 
-                        new CryoRounds({currentRank:0}), 
-                        new Stormbringer({currentRank:0}),
-                        new InfectedClip({currentRank:0}),
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new InfectedClip(),
                         new Wildfire({currentRank:0}),
-                        new HammerShot(),
-                        new Bane(),
+                        new HammerShot({currentRank:0}),
+                        new Bane({currentRank:0}),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1248,6 +1297,7 @@ function   ($, _, Backbone) {
                         new Wildfire({currentRank:0}),
                         new HammerShot(),
                         new Bane(),
+                        new RifleAptitude({currentRank:0}),
                         new CriticalDelay({currentRank:0}),
                         new HeavyCaliber({currentRank:0}),
                         new TaintedMag({currentRank:0}),
@@ -1272,7 +1322,7 @@ function   ($, _, Backbone) {
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread({currentRank:0}),
-                        new IncindiaryCoat({currentRank:0}),
+                        new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
                         new ChillingGrasp(),
                         new Cleanse({currentRank:0}),
@@ -1281,6 +1331,7 @@ function   ($, _, Backbone) {
                         new Ravage(),
                         new ShotgunSpazz(),
                         new TacticalPump({currentRank:0}),
+                        new ShotgunSavvy({currentRank:0}),
                         new BurdenedShell({currentRank:0}),
                         new TaintedShell({currentRank:0}),
                         new ViciousSpread({currentRank:0}),
@@ -1297,7 +1348,7 @@ function   ($, _, Backbone) {
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
-                        new IncindiaryCoat({currentRank:0}),
+                        new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
                         new ChillingGrasp(),
                         new Cleanse(),
@@ -1306,6 +1357,7 @@ function   ($, _, Backbone) {
                         new Ravage({currentRank:0}),
                         new ShotgunSpazz(),
                         new TacticalPump({currentRank:0}),
+                        new ShotgunSavvy({currentRank:0}),
                         new BurdenedShell({currentRank:0}),
                         new TaintedShell({currentRank:0}),
                         new ViciousSpread({currentRank:0}),
@@ -1322,7 +1374,7 @@ function   ($, _, Backbone) {
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
-                        new IncindiaryCoat({currentRank:0}),
+                        new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
                         new ChillingGrasp(),
                         new Cleanse(),
@@ -1331,6 +1383,7 @@ function   ($, _, Backbone) {
                         new Ravage({currentRank:0}),
                         new ShotgunSpazz({currentRank:0}),
                         new TacticalPump({currentRank:0}),
+                        new ShotgunSavvy({currentRank:0}),
                         new BurdenedShell({currentRank:0}),
                         new TaintedShell({currentRank:0}),
                         new ViciousSpread({currentRank:0}),
@@ -1347,7 +1400,7 @@ function   ($, _, Backbone) {
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
-                        new IncindiaryCoat(),
+                        new IncendiaryCoat(),
                         new ChargedShell(), 
                         new ChillingGrasp(),
                         new Cleanse(),
@@ -1356,6 +1409,7 @@ function   ($, _, Backbone) {
                         new Ravage({currentRank:0}),
                         new ShotgunSpazz({currentRank:0}),
                         new TacticalPump({currentRank:0}),
+                        new ShotgunSavvy({currentRank:0}),
                         new BurdenedShell({currentRank:0}),
                         new TaintedShell({currentRank:0}),
                         new ViciousSpread({currentRank:0}),

@@ -222,9 +222,9 @@ table.scaling{
     font-size: 11px;
     border:0px;
     padding:0px 0px 0px 0px;
-    margin-bottom:10px;
-    margin-right:10px;
-    width:250px;
+    margin-bottom:5px;
+    margin-right:5px;
+    width:260px;
 }
 span.scaling{
     font-size:11px;
@@ -271,7 +271,7 @@ div.modules{
 div.module{
     border-left: 2px solid #777777;
     padding-left: 5px;
-    width:250px;
+    width:230px;
     vertical-align: top;
     /*background:#404040;*/
     /*margin-right:5px;*/
