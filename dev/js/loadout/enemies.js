@@ -34,6 +34,7 @@ function   ($, _, Backbone, Auras) {
             var alternatives = {};
             var damageBreakdown = result.damageBreakdown;
             var specialDamage = result.specialDamage;
+            var faction = this.get('faction');
 
             if(!level){
                 level = this.get('level');
@@ -56,8 +57,11 @@ function   ($, _, Backbone, Auras) {
             var viral = 0;
             var corrosive = 0;
             var gas = 0;
-            var radiation = 0; 
-           
+            var radiation = 0;
+            
+            var modules = Object.keys(result['moduleDamageBreakdown']);
+            var numModules = modules.length;
+   
             if ((result['damageBreakdown']['Fire'] !== 0) && (result['damageBreakdown']['Freeze'] !== 0)){
                 blast = result['damageBreakdown']['Fire'] + result['damageBreakdown']['Freeze'];
             }
@@ -78,256 +82,295 @@ function   ($, _, Backbone, Auras) {
             }
             
             if(blast && corrosive){
-                alternatives['Blast/Corrosive'] = {};
-                alternatives['Blast/Corrosive']['Impact'] = result['damageBreakdown']['Impact'];
-                alternatives['Blast/Corrosive']['Piercing'] = result['damageBreakdown']['Piercing'];
-                alternatives['Blast/Corrosive']['Slashing'] = result['damageBreakdown']['Slashing'];
-                alternatives['Blast/Corrosive']['Blast'] = blast + result['damageBreakdown']['Blast'];
-                alternatives['Blast/Corrosive']['Corrosive'] = corrosive + result['damageBreakdown']['Corrosive'];
+                var element = "";
+                var tempElements = {};
+                tempElements['Blast'] = 0;
+                tempElements['Corrosive'] = 0;
+                for(var key in result['damageBreakdown']){
+                    if(result['damageBreakdown'][key] > 0){
+                        if(key.indexOf('(DoT') === -1){
+                            //alternatives[element][key] = result['damageBreakdown'][key];
+                            if((key !== 'Toxic') && (key !== 'Electrical') && (key !== 'Fire') && (key !== 'Freeze')){
+                                tempElements[key] = result['damageBreakdown'][key];
+                                if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Blast') && (key !== 'Corrosive')){
+                                    element += key + "/";
+                                }
+                            }
+                        }
+                    }
+                }
+                tempElements['Blast'] += blast;
+                tempElements['Corrosive'] += corrosive;
+                element += "Blast/Corrosive";
                 
-                alternatives['Blast/Corrosive']['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                alternatives['Blast/Corrosive']['Viral'] = result['damageBreakdown']['Viral'];
-                alternatives['Blast/Corrosive']['Gas'] = result['damageBreakdown']['Gas'];
-                alternatives['Blast/Corrosive']['Radiation'] = result['damageBreakdown']['Radiation'];
+                alternatives[element] = tempElements;
             } else {
                 if(blast){
-                    var element = "Blast";
-                    if(result['damageBreakdown']['Electrical']){
-                        element = 'Blast/Electrical';
-                    } else if(result['damageBreakdown']['Toxic']){
-                        element = 'Blast/Toxic';
-                    }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Electrical'] = result['damageBreakdown']['Electrical'];
-                    alternatives[element]['Toxic'] = result['damageBreakdown']['Toxic'];
-                    alternatives[element]['Blast'] = blast + result['damageBreakdown']['Blast'];
+                    // If the weapon has two modules and 
+                    // if the weapon lacks a module with the same base element
+                    // if the base damage type is a part of the combined element
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Freeze") || 
+                        (result['baseDamageType'] === "Fire"))){
                     
-                    alternatives[element]['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                    alternatives[element]['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                    alternatives[element]['Viral'] = result['damageBreakdown']['Viral'];
-                    alternatives[element]['Gas'] = result['damageBreakdown']['Gas'];
-                    alternatives[element]['Radiation'] = result['damageBreakdown']['Radiation'];
+                        // Skip
+                        
+                        // If we have formed blast and only have two modules then those two modules
+                        // is what formed blast, any other combinations are invalid as the module merging
+                        // has higher priority then the base element. If the base element is a part of the
+                        // combined element but not the same as either of the two modules then it's an
+                        // invalid combination.
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Blast'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Fire') && (key !== 'Freeze')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Blast')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Blast'] += blast;
+                        element += "Blast";
+
+                        alternatives[element] = tempElements;
+                    }
                 }
                 if(corrosive){
-                    var element = "Corrosive";
-                    if(result['damageBreakdown']['Fire']){
-                        element = 'Corrosive/Fire';
-                    } else if(result['damageBreakdown']['Freeze']){
-                        element = 'Corrosive/Freeze';
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Toxic") || 
+                        (result['baseDamageType'] === "Electrical"))){
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Corrosive'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Toxic') && (key !== 'Electrical')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Corrosive')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Corrosive'] += corrosive;
+                        element += "Corrosive";
+
+                        alternatives[element] = tempElements;
                     }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Fire'] = result['damageBreakdown']['Fire'];
-                    alternatives[element]['Freeze'] = result['damageBreakdown']['Freeze'];
-                    alternatives[element]['Corrosive'] = corrosive + result['damageBreakdown']['Corrosive'];
-                    
-                    alternatives[element]['Blast'] = result['damageBreakdown']['Blast'];
-                    alternatives[element]['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                    alternatives[element]['Viral'] = result['damageBreakdown']['Viral'];
-                    alternatives[element]['Gas'] = result['damageBreakdown']['Gas'];
-                    alternatives[element]['Radiation'] = result['damageBreakdown']['Radiation'];
                 }
             }
             
             if(magnetic && gas){
-                alternatives['Gas/Magnetic'] = {};
-                alternatives['Gas/Magnetic']['Impact'] = result['damageBreakdown']['Impact'];
-                alternatives['Gas/Magnetic']['Piercing'] = result['damageBreakdown']['Piercing'];
-                alternatives['Gas/Magnetic']['Slashing'] = result['damageBreakdown']['Slashing'];
-                alternatives['Gas/Magnetic']['Magnetic'] = magnetic + result['damageBreakdown']['Magnetic'];
-                alternatives['Gas/Magnetic']['Gas'] = gas + result['damageBreakdown']['Gas'];;
+                var element = "";
+                var tempElements = {};
+                tempElements['Magnetic'] = 0;
+                tempElements['Gas'] = 0;
+                for(var key in result['damageBreakdown']){
+                    if(result['damageBreakdown'][key] > 0){
+                        if(key.indexOf('(DoT') === -1){
+                            //alternatives[element][key] = result['damageBreakdown'][key];
+                            if((key !== 'Toxic') && (key !== 'Fire') && (key !== 'Electrical') && (key !== 'Freeze')){
+                                tempElements[key] = result['damageBreakdown'][key];
+                                if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Magnetic') && (key !== 'Gas')){
+                                    element += key + "/";
+                                }
+                            }
+                        }
+                    }
+                }
+                tempElements['Magnetic'] += magnetic;
+                tempElements['Gas'] += gas;
+                element += "Magnetic/Gas";
                 
-                alternatives['Gas/Magnetic']['Blast'] = result['damageBreakdown']['Blast'];
-                alternatives['Gas/Magnetic']['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                alternatives['Gas/Magnetic']['Viral'] = result['damageBreakdown']['Viral'];
-                alternatives['Gas/Magnetic']['Radiation'] = result['damageBreakdown']['Radiation'];
+                alternatives[element] = tempElements;
             } else {
                 if(magnetic){
-                    var element = "Magnetic";
-                    if(result['damageBreakdown']['Fire']){
-                        element = 'Magnetic/Fire';
-                    } else if(result['damageBreakdown']['Toxic']){
-                        element = 'Magnetic/Toxic';
-                    }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Fire'] = result['damageBreakdown']['Fire'];
-                    alternatives[element]['Toxic'] = result['damageBreakdown']['Toxic'];
-                    alternatives[element]['Magnetic'] = magnetic + result['damageBreakdown']['Magnetic'];
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Freeze") || 
+                        (result['baseDamageType'] === "Electrical"))){
                     
-                    alternatives[element]['Blast'] = result['damageBreakdown']['Blast'];
-                    alternatives[element]['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                    alternatives[element]['Viral'] = result['damageBreakdown']['Viral'];
-                    alternatives[element]['Gas'] = result['damageBreakdown']['Gas'];
-                    alternatives[element]['Radiation'] = result['damageBreakdown']['Radiation'];
+                        // Skip
+                    
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Magnetic'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Freeze') && (key !== 'Electrical')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Magnetic')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Magnetic'] += magnetic;
+                        element += "Magnetic";
+
+                        alternatives[element] = tempElements;
+                    }
                 }
                 if(gas){
-                    var element = "Gas";
-                    if(result['damageBreakdown']['Electrical']){
-                        element = 'Gas/Electrical';
-                    } else if(result['damageBreakdown']['Freeze']){
-                        element = 'Gas/Freeze';
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Toxic") || 
+                        (result['baseDamageType'] === "Fire"))){
+
+                        // Skip
+
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Gas'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Toxic') && (key !== 'Fire')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Gas')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Gas'] += gas;
+                        element += "Gas";
+
+                        alternatives[element] = tempElements;
                     }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Electrical'] = result['damageBreakdown']['Electrical'];
-                    alternatives[element]['Freeze'] = result['damageBreakdown']['Freeze'];
-                    alternatives[element]['Gas'] = gas + result['damageBreakdown']['Gas'];
-                    
-                    alternatives[element]['Blast'] = result['damageBreakdown']['Blast'];
-                    alternatives[element]['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                    alternatives[element]['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                    alternatives[element]['Viral'] = result['damageBreakdown']['Viral'];
-                    alternatives[element]['Radiation'] = result['damageBreakdown']['Radiation'];
                 }
             }
             
             if(viral && radiation){
-                alternatives['Viral/Radiation'] = {};
-                alternatives['Viral/Radiation']['Impact'] = result['damageBreakdown']['Impact'];
-                alternatives['Viral/Radiation']['Piercing'] = result['damageBreakdown']['Piercing'];
-                alternatives['Viral/Radiation']['Slashing'] = result['damageBreakdown']['Slashing'];
-                alternatives['Viral/Radiation']['Viral'] = viral + result['damageBreakdown']['Viral'];
-                alternatives['Viral/Radiation']['Radiation'] = radiation + result['damageBreakdown']['Radiation'];
-                
-                alternatives['Viral/Radiation']['Blast'] = result['damageBreakdown']['Blast'];
-                alternatives['Viral/Radiation']['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                alternatives['Viral/Radiation']['Gas'] = result['damageBreakdown']['Gas'];
-                alternatives['Viral/Radiation']['Magnetic'] = result['damageBreakdown']['Magnetic'];
-            } else {
-                if(viral){
-                    var element = "Viral";
-                    if(result['damageBreakdown']['Electrical']){
-                        element = 'Viral/Electrical';
-                    } else if(result['damageBreakdown']['Fire']){
-                        element = 'Viral/Fire';
-                    }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Electrical'] = result['damageBreakdown']['Electrical'];
-                    alternatives[element]['Fire'] = result['damageBreakdown']['Fire'];
-                    alternatives[element]['Viral'] = viral + result['damageBreakdown']['Viral'];
-                    alternatives[element]['Radiation'] = result['damageBreakdown']['Radiation'];
-                    
-                    alternatives[element]['Blast'] = result['damageBreakdown']['Blast'];
-                    alternatives[element]['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                    alternatives[element]['Gas'] = result['damageBreakdown']['Gas'];
-                    alternatives[element]['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                }
-                if(radiation){
-                    var element = "Radiation";
-                    if(result['damageBreakdown']['Freeze']){
-                        element = 'Radiation/Freeze';
-                    } else if(result['damageBreakdown']['Toxic']){
-                        element = 'Radiation/Toxic';
-                    }
-                    alternatives[element] = {};
-                    alternatives[element]['Impact'] = result['damageBreakdown']['Impact'];
-                    alternatives[element]['Piercing'] = result['damageBreakdown']['Piercing'];
-                    alternatives[element]['Slashing'] = result['damageBreakdown']['Slashing'];
-                    alternatives[element]['Freeze'] = result['damageBreakdown']['Freeze'];
-                    alternatives[element]['Toxic'] = result['damageBreakdown']['Toxic'];
-                    alternatives[element]['Radiation'] = radiation + result['damageBreakdown']['Radiation'];
-                    alternatives[element]['Viral'] = result['damageBreakdown']['Viral'];
-                    
-                    alternatives[element]['Blast'] = result['damageBreakdown']['Blast'];
-                    alternatives[element]['Corrosive'] = result['damageBreakdown']['Corrosive'];
-                    alternatives[element]['Gas'] = result['damageBreakdown']['Gas'];
-                    alternatives[element]['Magnetic'] = result['damageBreakdown']['Magnetic'];
-                }
-            }
-            // If no combinations it's a single element, or base damage
-            if(blast + corrosive + magnetic + viral + gas + radiation === 0){
-                var element = "Base damage";
-                // If there's a combination element use that instead.
-                if (result['damageBreakdown']['Blast']){
-                    element = 'Blast';
-                }
-                if (result['damageBreakdown']['Corrosive']){
-                    element = 'Corrosive';
-                }
-                if (result['damageBreakdown']['Gas']){
-                    element = 'Gas';
-                }
-                if (result['damageBreakdown']['Magnetic']){
-                    element = 'Magnetic';
-                }
-                if (result['damageBreakdown']['Viral']){
-                    element = 'Viral';
-                }
-                if (result['damageBreakdown']['Radiation']){
-                    element = 'Radiation';
-                }
-                
-                // If it's a single element use that
-                if (result['damageBreakdown']['Fire']){
-                    element = 'Fire';
-                    if (result['damageBreakdown']['Blast']){
-                        element = 'Blast';
-                    }
-                    if (result['damageBreakdown']['Gas']){
-                        element = 'Gas';
-                    }
-                    if (result['damageBreakdown']['Radiation']){
-                        element = 'Radiation';
-                    }
-                }
-                if (result['damageBreakdown']['Freeze']){
-                    element = 'Freeze';
-                    if (result['damageBreakdown']['Blast']){
-                        element = 'Blast';
-                    }
-                    if (result['damageBreakdown']['Magnetic']){
-                        element = 'Magnetic';
-                    }
-                    if (result['damageBreakdown']['Viral']){
-                        element = 'Viral';
-                    }
-                }
-                if (result['damageBreakdown']['Electrical']){
-                    element = 'Electrical';
-                    if (result['damageBreakdown']['Corrosive']){
-                        element = 'Corrosive';
-                    }
-                    if (result['damageBreakdown']['Magnetic']){
-                        element = 'Magnetic';
-                    }
-                    if (result['damageBreakdown']['Radiation']){
-                        element = 'Radiation';
-                    }
-                }
-                if (result['damageBreakdown']['Toxic']){
-                    element = 'Toxic';
-                    if (result['damageBreakdown']['Viral']){
-                        element = 'Viral';
-                    }
-                    if (result['damageBreakdown']['Gas']){
-                        element = 'Gas';
-                    }
-                    if (result['damageBreakdown']['Corrosive']){
-                        element = 'Corrosive';
-                    }
-                }
-                
-                alternatives[element] = {};
+                var element = "";
+                var tempElements = {};
+                tempElements['Viral'] = 0;
+                tempElements['Radiation'] = 0;
                 for(var key in result['damageBreakdown']){
                     if(result['damageBreakdown'][key] > 0){
                         if(key.indexOf('(DoT') === -1){
-                            alternatives[element][key] = result['damageBreakdown'][key];
+                            //alternatives[element][key] = result['damageBreakdown'][key];
+                            if((key !== 'Toxic') && (key !== 'Fire') && (key !== 'Electrical') && (key !== 'Freeze')){
+                                tempElements[key] = result['damageBreakdown'][key];
+                                if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Viral') && (key !== 'Radiation')){
+                                    element += key + "/";
+                                }
+                            }
                         }
                     }
                 }
+                tempElements['Viral'] += viral;
+                tempElements['Radiation'] += radiation;
+                element += "Viral/Radiation";
+                
+                alternatives[element] = tempElements;
+            } else {
+                if(viral){
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Toxic") || 
+                        (result['baseDamageType'] === "Freeze"))){
+                    
+                        // Skip
+                        
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Viral'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Toxic') && (key !== 'Freeze')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Viral')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Viral'] += viral;
+                        element += "Viral";
+
+                        alternatives[element] = tempElements;
+                    }
+                }
+                if(radiation){
+                    if(!(numModules % 2) && 
+                       !result['moduleDamageBreakdown'][result['baseDamageType']] &&
+                       ((result['baseDamageType'] === "Electrical") || 
+                        (result['baseDamageType'] === "Fire"))){
+                    
+                        // Skip
+                        
+                    } else {
+                        var element = "";
+                        var tempElements = {};
+                        tempElements['Radiation'] = 0;
+                        for(var key in result['damageBreakdown']){
+                            if(result['damageBreakdown'][key] > 0){
+                                if(key.indexOf('(DoT') === -1){
+                                    //alternatives[element][key] = result['damageBreakdown'][key];
+                                    if((key !== 'Electrical') && (key !== 'Fire')){
+                                        tempElements[key] = result['damageBreakdown'][key];
+                                        if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing') && (key !== 'Radiation')){
+                                            element += key + "/";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        tempElements['Radiation'] += radiation;
+                        element += "Radiation";
+
+                        alternatives[element] = tempElements;
+                    }
+                }
+            }
+            // If no combinations it's a single element, or base damage
+            if(blast + corrosive + magnetic + viral + gas + radiation === 0){                
+                element = "";
+                var tempElements = {};
+                for(var key in result['damageBreakdown']){
+                    if(result['damageBreakdown'][key] > 0){
+                        if(key.indexOf('(DoT') === -1){
+                            tempElements[key] = result['damageBreakdown'][key];
+                            if((key !== 'Impact') && (key !== 'Piercing') && (key !== 'Slashing')){
+                                element += key + "/";
+                            }
+                        }
+                    }
+                }
+                // Remove trailing slash
+                if(element !== ""){
+                    element = element.slice(0, - 1);
+                } else {
+                    element = "IPS";
+                }
+                
+                alternatives[element] = tempElements;
             }
             
             // Iterate over each damage alternative and calculate damage/DPS
@@ -465,9 +508,15 @@ function   ($, _, Backbone, Auras) {
                     }
                 }
                 
+                // Subtract faction damage for unsupported factions, only Orokin in the Void at the moment.
+                if(faction === "Orokin"){
+                    localHealthDps /= result['factionMod'];
+                    localShieldDps /= result['factionMod'];
+                }
+                
                 var shieldRatio = shield/(shield+health);
+                
                 // Transform total damage to DPS
-                //alternatives[alt]['DPS'] = localDps * dpsFactor;
                 alternatives[alt]['DPS'] = (localShieldDps * shieldRatio) + (localHealthDps * (1-shieldRatio));
                 // Calculate combined shield + health DPS
                 alternatives[alt]['shieldDps'] = localShieldDps;
@@ -482,12 +531,30 @@ function   ($, _, Backbone, Auras) {
     // Infested
     //
     
-    AncientDisruptor = Enemy.extend({
+     AverageInfested = Enemy.extend({
         initialize:function(){
             //console.log("enemy init");
         },
         defaults:{
-            name:"Ancient disruptor",
+            name:"Infested",
+            baseLevel:1,
+            level:1,
+            baseArmor:0,
+            baseShield:0,
+            baseHealth:400,
+            faction:"Infested",
+            shieldMultipliers:{},
+            armorMultipliers:{},
+            damageMultipliers:{'Piercing':0.0625, 'Slashing':0.225, 'Fire':0.1875, 'Corrosive':0.1875, 'Gas':0.3125,'Freeze':-0.125, 'Toxic':-0.125, 'Radiation':-0.1875, 'Viral':-0.125}
+        }
+    });
+    
+    AncientDisrupter = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Ancient disrupter",
             baseLevel:5,
             level:5,
             baseArmor:0,
@@ -497,6 +564,24 @@ function   ($, _, Backbone, Auras) {
             shieldMultipliers:{},
             armorMultipliers:{},
             damageMultipliers:{'Slashing':0.15, 'Blast':0.5, 'Corrosive':0.75, 'Freeze':-0.25, 'Toxic':-0.5, 'Radiation':-0.75}
+        }
+    });
+    
+    AncientHealer = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Ancient healer",
+            baseLevel:5,
+            level:5,
+            baseArmor:0,
+            baseShield:0,
+            baseHealth:400,
+            faction:"Infested",
+            shieldMultipliers:{},
+            armorMultipliers:{},
+            damageMultipliers:{'Piercing':0.25, 'Freeze':0.5, 'Radiation':0.5, 'Blast':-0.5}
         }
     });
     
@@ -518,9 +603,45 @@ function   ($, _, Backbone, Auras) {
         }
     });
     
+    InfestedRunner = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Runner",
+            baseLevel:1,
+            level:1,
+            baseArmor:0,
+            baseShield:0,
+            baseHealth:80,
+            faction:"Infested",
+            shieldMultipliers:{},
+            armorMultipliers:{},
+            damageMultipliers:{'Slashing':0.5, 'Fire':0.5, 'Gas':0.5, 'Freeze':-0.5}
+        }
+    });
+    
     //
     // Grineer
     //
+    
+    AverageGrineer = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Grineer",
+            baseLevel:1,
+            level:1,
+            baseArmor:100,
+            baseShield:0,
+            baseHealth:200,
+            faction:"Grineer",
+            shieldMultipliers:{},
+            armorMultipliers:{'Piercing':0.325, 'Freeze':0.125, 'Toxic':0.125, 'Corrosive':0.375,'Radiation':0.375, 'Slashing':-0.325, 'Blast':-0.125, 'Electrical':-0.25, 'Magnetic':-0.25},
+            damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
+        }
+    });
     
     GrineerNapalm = Enemy.extend({
         initialize:function(){
@@ -535,8 +656,43 @@ function   ($, _, Backbone, Auras) {
             baseHealth:600,
             faction:"Grineer",
             shieldMultipliers:{},
-            // Armor multipliers are inverted as they reduce armor, which increases damage
-            armorMultipliers:{'Piercing':0.15, 'Freeze':0.25, 'Radiation':0.75, 'Slashing':-0.5, 'Electricity':-0.5, 'Magnetic':-0.5},
+            armorMultipliers:{'Piercing':0.15, 'Freeze':0.25, 'Radiation':0.75, 'Slashing':-0.5, 'Electrical':-0.5, 'Magnetic':-0.5},
+            damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
+        }
+    });
+    
+    GrineerHeavyGunner = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Grineer Heavy Gunner",
+            baseLevel:8,
+            level:1,
+            baseArmor:500,
+            baseShield:0,
+            baseHealth:300,
+            faction:"Grineer",
+            shieldMultipliers:{},
+            armorMultipliers:{'Piercing':0.5, 'Corrosive':0.75, 'Toxic':0.25, 'Slashing':-0.15, 'Blast':-0.25},
+            damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
+        }
+    });
+    
+    GrineerLancer = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Grineer Lancer",
+            baseLevel:1,
+            level:1,
+            baseArmor:100,
+            baseShield:0,
+            baseHealth:100,
+            faction:"Grineer",
+            shieldMultipliers:{},
+            armorMultipliers:{'Piercing':0.5, 'Corrosive':0.75, 'Toxic':0.25, 'Slashing':-0.15, 'Blast':-0.25},
             damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
         }
     });
@@ -554,7 +710,6 @@ function   ($, _, Backbone, Auras) {
             baseHealth:120,
             faction:"Grineer",
             shieldMultipliers:{},
-            // Armor multipliers are inverted as they reduce armor, which increases damage
             armorMultipliers:{'Piercing':0.5, 'Corrosive':0.75, 'Toxic':0.25, 'Slashing':-0.15, 'Blast':-0.25},
             damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
         }
@@ -563,6 +718,24 @@ function   ($, _, Backbone, Auras) {
     //
     // Corpus
     //
+    
+    AverageCorpus = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corpus",
+            baseLevel:1,
+            level:1,
+            baseArmor:0,
+            baseShield:200,
+            baseHealth:200,
+            faction:"Corpus",
+            armorMultipliers:{},
+            shieldMultipliers:{'Impact':0.325, 'Freeze':0.25, 'Toxic':0.125,'Magnetic':0.75, 'Piercing':-0.325, 'Corrosive':-0.25,'Fire':-0.25,'Radiation':-0.125},
+            damageMultipliers:{'Piercing':0.125, 'Electrical':0.25, 'Radiation':0.125, 'Toxic':0.125, 'Viral':0.25, 'Impact':-0.125, 'Gas':-0.125}
+        }
+    });
     
     CorpusShockwaveMoa = Enemy.extend({
         initialize:function(){
@@ -595,7 +768,7 @@ function   ($, _, Backbone, Auras) {
             baseHealth:700,
             faction:"Corpus",
             armorMultipliers:{},
-            shieldMultipliers:{'Impact':0.15, 'Toxic':0.25, 'Magnetic':0.75, 'Piercing':-0.5, 'Heat':-0.5, 'Corrosive':-0.5},
+            shieldMultipliers:{'Impact':0.15, 'Toxic':0.25, 'Magnetic':0.75, 'Piercing':-0.5, 'Fire':-0.5, 'Corrosive':-0.5},
             damageMultipliers:{'Slashing':0.25, 'Toxic':0.5, 'Viral':0.5, 'Impact':-0.25, 'Gas':-0.25}
         }
     });
@@ -613,9 +786,124 @@ function   ($, _, Backbone, Auras) {
             baseHealth:60,
             faction:"Corpus",
             armorMultipliers:{},
-            shieldMultipliers:{'Impact':0.5, 'Cold':0.5, 'Magnetic':0.75, 'Piercing':-0.15, 'Radiation':-0.25},
+            shieldMultipliers:{'Impact':0.5, 'Freeze':0.5, 'Magnetic':0.75, 'Piercing':-0.15, 'Radiation':-0.25},
             damageMultipliers:{'Slashing':0.25, 'Toxic':0.5, 'Viral':0.5, 'Impact':-0.25, 'Gas':-0.25}
         }
     });
+    
+    //
+    // Void
+    //
+    
+    AverageCorrupted = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted",
+            baseLevel:1,
+            level:1,
+            baseArmor:140,
+            baseShield:80,
+            baseHealth:300,
+            faction:"Orokin",
+            shieldMultipliers:{'Impact':0.2, 'Piercing':-0.06, 'Freeze':0.2, 'Magnetic':0.3, 'Radiation':-0.1},
+            armorMultipliers:{'Piercing':0.13, 'Slashing':-0.13, 'Freeze':0.05, 'Electrical':-0.1, 'Toxic':0.05, 'Blast':-0.05, 'Corrosive':0.15, 'Magnetic':-0.1, 'Radiation':0.15},
+            damageMultipliers:{'Impact':-0.15, 'Slashing':0.18, 'Cold':-0.05, 'Fire':0.1, 'Toxic':-0.05, 'Electrical':0.1, 'Freeze':-0.05, 'Blast':0.1, 'Corrosive':0.15, 'Gas':-0.25, 'Radiation':-0.1, 'Viral':0.4}
+        }
+    });
+    
+    CorruptedHeavyGunner = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted Heavy Gunner",
+            baseLevel:8,
+            level:1,
+            baseArmor:500,
+            baseShield:0,
+            baseHealth:700,
+            faction:"Orokin",
+            shieldMultipliers:{},
+            // Ferrite
+            armorMultipliers:{'Piercing':0.5, 'Corrosive':0.75, 'Toxic':0.25, 'Slashing':-0.15, 'Blast':-0.25},
+            damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
+        }
+    });
+    
+    CorruptedAncient = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted Ancient",
+            baseLevel:5,
+            level:5,
+            baseArmor:0,
+            baseShield:0,
+            baseHealth:400,
+            faction:"Orokin",
+            shieldMultipliers:{},
+            armorMultipliers:{},
+            damageMultipliers:{'Slashing':0.15, 'Blast':0.5, 'Corrosive':0.75, 'Freeze':-0.25, 'Toxic':-0.5, 'Radiation':-0.75}
+        }
+    });
+    
+    CorruptedCrewman = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted Crewman",
+            baseLevel:10,
+            level:1,
+            baseArmor:0,
+            baseShield:150,
+            baseHealth:60,
+            faction:"Orokin",
+            armorMultipliers:{},
+            shieldMultipliers:{'Impact':0.5, 'Freeze':0.5, 'Magnetic':0.75, 'Piercing':-0.15, 'Radiation':-0.25},
+            damageMultipliers:{'Slashing':0.25, 'Toxic':0.5, 'Viral':0.5, 'Impact':-0.25, 'Gas':-0.25}
+        }
+    });
+    
+    CorruptedLancer = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted Lancer",
+            baseLevel:10,
+            level:1,
+            baseArmor:200,
+            baseShield:0,
+            baseHealth:60,
+            faction:"Orokin",
+            shieldMultipliers:{},
+            // Alloy
+            armorMultipliers:{'Piercing':0.15, 'Freeze':0.25, 'Radiation':0.75, 'Slashing':-0.5, 'Electrical':-0.5, 'Magnetic':-0.5},
+            damageMultipliers:{'Slashing':0.25, 'Fire':0.25, 'Viral':0.75, 'Impact':-0.25, 'Gas':-0.5}
+        }
+    });
+    
+    CorruptedMoa = Enemy.extend({
+        initialize:function(){
+            //console.log("enemy init");
+        },
+        defaults:{
+            name:"Corrupted Moa",
+            baseLevel:15,
+            level:15,
+            baseArmor:0,
+            baseShield:250,
+            baseHealth:250,
+            faction:"Orokin",
+            armorMultipliers:{},
+            shieldMultipliers:{'Impact':0.5, 'Freeze':0.5, 'Magnetic':0.75, 'Piercing':-0.15, 'Radiation':-0.25},
+            damageMultipliers:{'Piercing':0.25, 'Electrical':0.5, 'Radiation':0.25, 'Slashing':-0.25, 'Toxic':-0.25}
+        }
+    });
+    
     return this;
 });

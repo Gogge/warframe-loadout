@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout 11.5.4 revision 3
+ * Warframe Loadout 11.9.2 revision 5
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license
@@ -27,7 +27,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     $.expr[":"].icontains = $.expr.createPseudo(function (arg) {                                                                                                                                                                
         return function (elem) {                                                            
             return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;        
-        };                                                                                  
+        };                                                                         
     });
     
     $.cookie.json = true;
@@ -44,40 +44,40 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     ]);
     
     var pistolList = new Weapons.WeaponCollection([]);
-    var pistolArray = Weapons.weaponList.where({weaponType:"pistol"});
-    for(var i = 0;i<pistolArray.length;i++){
-        pistolList.add(new pistolArray[i].constructor());
-    };
+//    var pistolArray = Weapons.weaponList.where({weaponType:"pistol"});
+//    for(var i = 0;i<pistolArray.length;i++){
+//        pistolList.add(new pistolArray[i].constructor());
+//    };
     
     var rifleList = new Weapons.WeaponCollection([]);
-    var rifleArray = Weapons.weaponList.where({weaponType:"rifle"});
-    for(var i = 0;i<rifleArray.length;i++){
-        rifleList.add(new rifleArray[i].constructor());
-    };
+//    var rifleArray = Weapons.weaponList.where({weaponType:"rifle"});
+//    for(var i = 0;i<rifleArray.length;i++){
+//        rifleList.add(new rifleArray[i].constructor());
+//    };
     
     var shotgunList = new Weapons.WeaponCollection([]);
-    var shotgunArray = Weapons.weaponList.where({weaponType:"shotgun"});
-    for(var i = 0;i<shotgunArray.length;i++){
-        shotgunList.add(new shotgunArray[i].constructor());
-    };
+//    var shotgunArray = Weapons.weaponList.where({weaponType:"shotgun"});
+//    for(var i = 0;i<shotgunArray.length;i++){
+//        shotgunList.add(new shotgunArray[i].constructor());
+//    };
     
     var sniperList = new Weapons.WeaponCollection([]);
-    var sniperArray = Weapons.weaponList.where({weaponType:"sniper"});
-    for(var i = 0;i<sniperArray.length;i++){
-        sniperList.add(new sniperArray[i].constructor());
-    };
+//    var sniperArray = Weapons.weaponList.where({weaponType:"sniper"});
+//    for(var i = 0;i<sniperArray.length;i++){
+//        sniperList.add(new sniperArray[i].constructor());
+//    };
     
     var bowList = new Weapons.WeaponCollection([]);
-    var bowArray = Weapons.weaponList.where({weaponType:"bow"});
-    for(var i = 0;i<bowArray.length;i++){
-        bowList.add(new bowArray[i].constructor());
-    };
+//    var bowArray = Weapons.weaponList.where({weaponType:"bow"});
+//    for(var i = 0;i<bowArray.length;i++){
+//        bowList.add(new bowArray[i].constructor());
+//    };
     
     var sentinelList = new Weapons.WeaponCollection([]);
-    var sentinelArray = Weapons.weaponList.where({weaponType:"sentinel"});
-    for(var i = 0;i<sentinelArray.length;i++){
-        sentinelList.add(new sentinelArray[i].constructor());
-    };
+//    var sentinelArray = Weapons.weaponList.where({weaponType:"sentinel"});
+//    for(var i = 0;i<sentinelArray.length;i++){
+//        sentinelList.add(new sentinelArray[i].constructor());
+//    };
     
     //
     // Create new weapon/module/auras from saved cookie values
@@ -175,6 +175,7 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         getWeaponFromSharedUrl(false);
     });
     
+    
     var weaponCategoriesList = {
             "Favorite":favoriteList,
             "Pistol":pistolList,
@@ -189,35 +190,45 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
     
 
     $(document).ready(function() {
+        //var t0 = performance.now();
+        
+        var selected = $.cookie('selected') || "pistol";
+        var showFavorite = (typeof $.cookie('favorite') !== 'undefined') ? $.cookie('favorite') : true;
+        
+        var weaponView = new WeaponView.WeaponCategoryView({list:weaponCategoriesList});
+        
         getWeaponFromSharedUrl(true);
         //
         // Options
         //
-        
-        var optionsListView = new OptionView.OptionsListView({collection:optionList});
+        var optionsListView = new OptionView.OptionsListView({collection:optionList, weaponCategoriesList:weaponCategoriesList, weaponView:weaponView});
         optionsListView.render();
         $("#optionsContainer").html(optionsListView.el);
-        
         //
         // Weapons
         //
-        var weaponView = new WeaponView.WeaponCategoryView({list:weaponCategoriesList});
-        weaponView.render();
-        $("#weaponContainer").html(weaponView.el);
         
+        var weaponArray = Weapons.weaponList.where({weaponType:selected});
+        var categoryList = weaponCategoriesList[selected.charAt(0).toUpperCase() + selected.slice(1)];
+        for(var i = 0;i<weaponArray.length;i++){
+            categoryList.add(new weaponArray[i].constructor());
+        };
+        setTimeout(function(){
+            weaponView.render();
+            $("#weaponContainer").html(weaponView.el);
         
-        // Hide/show stuff based on cookie settings
-        var hidden_options = Object.keys(weaponCategoriesList);
-        hidden_options.shift(); // Unhide the first item in the list, favorites
-        hidden_options.shift(); // Unhide the first item in the list, pistols
-        if($.cookie('options')){
-            hidden_options = $.cookie('options');
-        } 
-
-        for(var i = 0;i<hidden_options.length;i++){
-            $(".mark." + hidden_options[i].toLowerCase()).addClass("faded");
-            $(".weaponTypeHeader." + hidden_options[i]).addClass("hidden");
-        }
+            // Hide/show stuff based on cookie settings
+            $(".mark").addClass("faded");
+            $(".weaponTypeHeader").addClass("hidden");
+            $(".mark." + selected.toLowerCase()).removeClass("faded");
+            $(".weaponTypeHeader." + selected.toLowerCase()).removeClass("hidden");
+            if(showFavorite){
+                $(".mark.favorite").removeClass("faded");
+                $(".weaponTypeHeader.favorite").removeClass("hidden");
+            }
+            //var t1 = performance.now();
+            //console.log("Page load/render took " + (t1 - t0) + " milliseconds.");
+        }, 0);
         
     });
 });

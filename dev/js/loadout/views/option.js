@@ -1,5 +1,5 @@
-define(['jquery', 'underscore', 'backbone'],
-function   ($, _, Backbone) {
+define(['jquery', 'underscore', 'backbone', 'loadout/weapons'],
+function   ($, _, Backbone, Weapons) {
     //
     // Options
     //
@@ -25,6 +25,7 @@ function   ($, _, Backbone) {
         },
         toggle: function(e){
             e.preventDefault();
+            var selected = this.model.get('option');
             if(!this.$el.find(".favorite").length){
                 $(".mark").not(".favorite").addClass("faded");
                 $(this.el).find(".mark").removeClass("faded");
@@ -34,13 +35,23 @@ function   ($, _, Backbone) {
                 $(this.el).find(".mark").toggleClass("faded");
                 $(".weaponTypeHeader." + this.model.get('option')).toggleClass("hidden");
             }
+
+            if(this.model.get('option') === "favorite"){
+                $.cookie('favorite', !$(this.el).find(".mark").hasClass("faded"));
+            } else {
+                $.cookie('selected', selected);
+            }
             
-            var hidden_options = [];
-            $(".weaponTypeHeader.hidden").each(function(){
-                hidden_options.push($(this).attr("id"));
-            });
+            var selectedCapitalized = selected.charAt(0).toUpperCase() + selected.slice(1);
+            var categoryList = this.options.weaponCategoriesList[selectedCapitalized];
             
-            $.cookie('options', hidden_options);
+            if(categoryList.length === 0){
+                var weaponArray = Weapons.weaponList.where({weaponType:selected});
+                for(var i = 0;i<weaponArray.length;i++){
+                    categoryList.add(new weaponArray[i].constructor());
+                };
+                categoryList.trigger('weaponLoad');
+            }
         },
         render:function(){
             var template = _.template($("#optionsTemplate").html());
@@ -54,7 +65,7 @@ function   ($, _, Backbone) {
             _.bindAll(this, "renderOption");
         },
         renderOption:function(model){
-            var optionView = new OptionView({model:model});
+            var optionView = new OptionView({model:model, weaponCategoriesList:this.options.weaponCategoriesList, weaponView:this.options.weaponView});
             optionView.render();
             $(this.el).append(optionView.el);
         },

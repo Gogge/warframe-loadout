@@ -9,7 +9,6 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
        initialize:function(){
         if(!this.get('modules')){this.set('modules', Modules.getNewPistolModCollection());};
         if(!this.get('auras')){this.set('auras', Auras.getNewAuraCollection());};
-        
         this.updateModuleDps();
        },
        defaults: {
@@ -33,15 +32,13 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            return module_types;
        },
         getDps:function(module_types, enemy){
-            //var infestedCharger = new Enemies.InfestedCharger();
-            //var grineerTrooper = new Enemies.GrineerTrooper();
-            //var corpusCrewman = new Enemies.CorpusCrewman();
-            var infestedAncient = new Enemies.AncientDisruptor();
-            var grineerNapalm = new Enemies.GrineerNapalm();
-            var corpusTech = new Enemies.CorpusTech();
-            var corpusMoa = new Enemies.CorpusShockwaveMoa();
+            var infested = new Enemies.AverageInfested();
+            var grineer = new Enemies.AverageGrineer();
+            var corpus = new Enemies.AverageCorpus();
+            var corrupted = new Enemies.AverageCorrupted();
             //var damageType = this.get('damageType');
             var weaponType = this.get('weaponType');
+            var projectiles = this.get('Projectiles') || 1;
             var result = {};
             result['damageBreakdown'] = {};
             result['damageBreakdown']['Piercing'] = 0;
@@ -57,6 +54,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['damageBreakdown']['Corrosive'] = 0;
             result['damageBreakdown']['Gas'] = 0;
             result['damageBreakdown']['Radiation'] = 0;
+            
+            result['moduleDamageBreakdown'] = {};
+            
             var damage = 0;
             var rifleAmp = 0;
             
@@ -83,7 +83,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             //
 
             // Rifle amp
-            if((this.get('weaponType') === "rifle") || (this.get('weaponType') === "sniper") || (this.get('weaponType') === "bow")){
+            if((weaponType === "rifle") || (weaponType === "sniper") || (weaponType === "bow")){
                 rifleAmp = this.get('auras').where({name:"Rifle Amp"})[0].getPercents()["Rifle Damage"];
             }
             // Corrosive Projection
@@ -94,112 +94,39 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             // Base damage
             //
             
-            //var baseDamage = this.get('damage');
-            var baseImpact = this.get('Impact') || 0;
-            var basePiercing = this.get('Piercing')|| 0;
-            var baseSlashing = this.get('Slashing')|| 0;
-            var baseToxic = this.get('Toxic')|| 0;
-            var baseFire = this.get('Fire')|| 0;
-            var baseElectrical = this.get('Electrical')|| 0;
-            var baseFreeze = this.get('Freeze')|| 0;
-            var baseBlast = this.get('Blast')|| 0;
-            var baseMagnetic = this.get('Magnetic')|| 0;
-            var baseViral = this.get('Viral')|| 0;
-            var baseCorrosive = this.get('Corrosive')|| 0;
-            var baseGas = this.get('Gas')|| 0;
-            var baseRadiation = this.get('Radiation')|| 0;
-            
-            
+            // We loop through each element and calculate it's base damage
+            for(var key in result['damageBreakdown']){
+                //get base damage, or zero if it's not set
+                var baseTypeDamage = this.get(key) || 0;
+               
+                // Add serration type mods and rifle amp
+                var damageMod = (100 + module_types['Damage'] + rifleAmp) / 100;
+                baseTypeDamage = baseTypeDamage * damageMod;
+                
+                // Add faction damage mods, bane, cleanse, expel
+                var factionMod = (100 + module_types['Faction Damage']) / 100;
+                baseTypeDamage = baseTypeDamage * factionMod;
 
-            // Add serration type mods and rifle amp
-            var damageMod = (100 + module_types['Damage'] + rifleAmp) / 100;
-            baseImpact = baseImpact * damageMod;
-            basePiercing = basePiercing * damageMod;
-            baseSlashing = baseSlashing * damageMod;
-            baseToxic = baseToxic * damageMod;
-            baseFire = baseFire * damageMod;
-            baseElectrical = baseElectrical * damageMod;
-            baseFreeze = baseFreeze * damageMod;
-            baseBlast = baseBlast * damageMod;
-            baseMagnetic = baseMagnetic * damageMod;
-            baseViral = baseViral * damageMod;
-            baseCorrosive = baseCorrosive * damageMod;
-            baseGas = baseGas * damageMod;
-            baseRadiation = baseRadiation * damageMod;
+                // Add charged/primed chamber if used (only sniper rifles)
+                // We divide the damage bonus with the magazine capacity, if you have 1 shot in the mag you get 100% bonus, two shots 50%, etc.
+                // as a way to average the bonus over serveral shots. More shots in the magazine diminishes the benefit of the mods.
+                var chamberMod = (100 + module_types['First Shot Damage Bonus'] / magazineCapacity) / 100;
+                baseTypeDamage = baseTypeDamage * chamberMod;
+                
+                //
+                // Crit
+                //
 
-            
-            // Add faction damage mods, bane, cleanse, expel
-            var factionMod = (100 + module_types['Faction Damage']) / 100;
-            baseImpact = baseImpact * factionMod;
-            basePiercing = basePiercing * factionMod;
-            baseSlashing = baseSlashing * factionMod;
-            baseToxic = baseToxic * factionMod;
-            baseFire = baseFire * factionMod;
-            baseElectrical = baseElectrical * factionMod;
-            baseFreeze = baseFreeze * factionMod;
-            baseBlast = baseBlast * factionMod;
-            baseMagnetic = baseMagnetic * factionMod;
-            baseViral = baseViral * factionMod;
-            baseCorrosive = baseCorrosive * factionMod;
-            baseGas = baseGas * factionMod;
-            baseRadiation = baseRadiation * factionMod;
-            
-            // Add charged/primed chamber if used (only sniper rifles)
-            // We divide the damage bonus with the magazine capacity, if you have 1 shot in the mag you get 100% bonus, two shots 50%, etc.
-            // as a way to average the bonus over serveral shots. More shots in the magazine diminishes the benefit of the mods.
-            var chamberMod = (100 + module_types['First Shot Damage Bonus'] / magazineCapacity) / 100;
-            baseImpact = baseImpact * chamberMod;
-            basePiercing = basePiercing * chamberMod;
-            baseSlashing = baseSlashing * chamberMod;
-            baseToxic = baseToxic * chamberMod;
-            baseFire = baseFire * chamberMod;
-            baseElectrical = baseElectrical * chamberMod;
-            baseFreeze = baseFreeze * chamberMod;
-            baseBlast = baseBlast * chamberMod;
-            baseMagnetic = baseMagnetic * chamberMod;
-            baseViral = baseViral * chamberMod;
-            baseCorrosive = baseCorrosive * chamberMod;
-            baseGas = baseGas * chamberMod;
-            baseRadiation = baseRadiation * chamberMod;
+                var statCritChance = Math.min(this.get('Crit Chance') * (100 + module_types['Crit Chance']) / 100, 1.0);
+                var statCritDamage = this.get('Crit Damage') * (100 + module_types['Crit Damage']) / 100;
+                baseTypeDamage = baseTypeDamage * (1 + statCritChance * (statCritDamage - 1.0));
 
-            //
-            // Crit
-            //
-            
-            var statCritChance = Math.min(this.get('Crit Chance') * (100 + module_types['Crit Chance']) / 100, 1.0);
-            // The critical damage calculations are for total damage (includes the base 100%), so we exclude that part to get only the critical damage portion
-            var statCritDamage = this.get('Crit Damage') * (100 + module_types['Crit Damage']) / 100;
-            //var criticalDamage = damage * statCritChance * (statCritDamage - 1.0);
-            //damage += criticalDamage;
-            baseImpact += baseImpact * statCritChance * (statCritDamage - 1.0);
-            basePiercing += basePiercing * statCritChance * (statCritDamage - 1.0);
-            baseSlashing += baseSlashing * statCritChance * (statCritDamage - 1.0);
-            baseToxic += baseToxic * statCritChance * (statCritDamage - 1.0);
-            baseFire += baseFire * statCritChance * (statCritDamage - 1.0);
-            baseElectrical += baseElectrical * statCritChance * (statCritDamage - 1.0);
-            baseFreeze += baseFreeze * statCritChance * (statCritDamage - 1.0);
-            baseBlast += baseBlast * statCritChance * (statCritDamage - 1.0);
-            baseMagnetic += baseMagnetic * statCritChance * (statCritDamage - 1.0);
-            baseViral += baseViral * statCritChance * (statCritDamage - 1.0);
-            baseCorrosive += baseCorrosive * statCritChance * (statCritDamage - 1.0);
-            baseGas += baseGas * statCritChance * (statCritDamage - 1.0);
-            baseRadiation += baseRadiation * statCritChance * (statCritDamage - 1.0);
+                result['damageBreakdown'][key] += baseTypeDamage;
 
+                // For elemental mods we sum the base stats
+                damage += baseTypeDamage;
+            }
             
-            result['damageBreakdown']['Toxic'] = baseToxic;
-            result['damageBreakdown']['Fire'] = baseFire;
-            result['damageBreakdown']['Electrical'] = baseElectrical;
-            result['damageBreakdown']['Freeze'] = baseFreeze;
-            result['damageBreakdown']['Blast'] = baseBlast;
-            result['damageBreakdown']['Magnetic'] = baseMagnetic;
-            result['damageBreakdown']['Viral'] = baseViral;
-            result['damageBreakdown']['Corrosive'] = baseCorrosive;
-            result['damageBreakdown']['Gas'] = baseGas;
-            result['damageBreakdown']['Radiation'] = baseRadiation;
-            
-            // For elemental mods we sum the base stats
-            damage = baseImpact + basePiercing + baseSlashing + baseToxic + baseFire + baseElectrical + baseFreeze + baseBlast + baseMagnetic + baseViral + baseCorrosive + baseGas + baseRadiation;
-
             //
             // Elemental type mods
             //
@@ -214,6 +141,18 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['damageBreakdown']['Fire'] += fire;
             result['damageBreakdown']['Electrical'] += electrical;
             result['damageBreakdown']['Freeze'] += freeze;
+            if(toxic){
+                result['moduleDamageBreakdown']['Toxic'] = toxic;
+            }
+            if(fire){
+                result['moduleDamageBreakdown']['Fire'] = fire;
+            }
+            if(electrical){
+                result['moduleDamageBreakdown']['Electrical'] = electrical;
+            }
+            if(freeze){
+                result['moduleDamageBreakdown']['Freeze'] = freeze;
+            }
             
             //
             // Other damage
@@ -237,18 +176,25 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             
             // Add base damage specific Piercing/Rupture/etc. 
             // Note that these do not affect elemental damage
-            baseImpact = baseImpact * (100 + module_types['Impact']) / 100;
-            basePiercing = basePiercing * (100 + module_types['Piercing'])/ 100;
-            baseSlashing = baseSlashing * (100 + module_types['Slashing']) / 100;
             
-            result['damageBreakdown']['Impact'] = baseImpact;
-            result['damageBreakdown']['Piercing'] = basePiercing;
-            result['damageBreakdown']['Slashing'] = baseSlashing;
+            result['damageBreakdown']['Impact'] *= (100 + module_types['Impact']) / 100;
+            result['damageBreakdown']['Slashing'] *= (100 + module_types['Slashing']) / 100;
+            
+            // Accelerated Blast is bugged, it acts an elemental mod, to simulate this it has "Elemental Piercing"
+            if(module_types['Elemental Piercing']){
+                var basePierce = result['damageBreakdown']['Piercing'];
+                result['damageBreakdown']['Piercing'] += damage * module_types['Elemental Piercing'] / 100;
+                result['damageBreakdown']['Piercing'] += basePierce * module_types['Piercing'] / 100;
+            } else {
+                result['damageBreakdown']['Piercing'] *=(100 + module_types['Piercing']) / 100;
+            }
+            
             
             var totalDamage = 0;
             result['dpsBreakdown'] = {};
             result['burstBreakdown'] = {};
             var multishotDamage = 0.0;
+            projectiles *= 1 + module_types['Multishot'] / 100;
             for (var key in result['damageBreakdown']){
                 // Add multishot
                 multishotDamage += result['damageBreakdown'][key] * module_types['Multishot'] / 100;
@@ -276,10 +222,12 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             //    dps = totalDamage * fireRate;
             //}
             
-            // Note to self: remember to add new results in the constructor if used for sorting
+            // Note to self: remember to add new results just below this in the updateModuleDps function, 
+            // in the sorting, and add it in the weapon.js view thing too.
             result['dps'] = dps;
             result['shot'] = totalDamage;
             result['burst'] = burst;
+            result['procs'] = statusChance * projectiles;
             //result['baseDamage'] = baseDamage;
             //result['criticalDamage'] = criticalDamage;
             result['multishotDamage'] = multishotDamage;
@@ -288,8 +236,11 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['Magazine Capacity'] = magazineCapacity;
             result['Crit Chance'] = statCritChance;
             result['Crit Damage'] = statCritDamage;
+            result['Multishot'] = module_types['Multishot'];
             
             result['specialDamage'] = specialDamage;
+            
+            result['factionMod'] = factionMod;
             
             result['baseDamageStats'] = {};
             result['baseDamageStats']['Impact'] = this.get('Impact') || 0;
@@ -306,6 +257,20 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['baseDamageStats']['Gas'] = this.get('Gas')|| 0;
             result['baseDamageStats']['Radiation'] = this.get('Radiation')|| 0;
             
+            result['baseDamageType'] = "";
+            if(result['baseDamageStats']['Toxic'] > 0){
+                result['baseDamageType'] = 'Toxic';
+            }
+            if(result['baseDamageStats']['Fire'] > 0){
+                result['baseDamageType'] = 'Fire';
+            }
+            if(result['baseDamageStats']['Electrical'] > 0){
+                result['baseDamageType'] = 'Electrical';
+            }
+            if(result['baseDamageStats']['Freeze'] > 0){
+                result['baseDamageType'] = 'Freeze';
+            }
+            
             result['stats'] = {};
             result['stats']['Fire Rate'] = fireRate;
             result['stats']['Reload Speed'] = reloadSpeed;
@@ -313,19 +278,31 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['stats']['Crit Chance'] = statCritChance;
             result['stats']['Crit Damage'] = statCritDamage;
             result['stats']['Status Chance'] = statusChance;
+            // stat_name += " (" + ((1 - Math.pow((1 - stat_value), proc_chances)) * 100).toFixed(1) + "%)";
+            result['stats']['Status Probability'] = (1 - Math.pow((1 - statusChance), projectiles)) * 100;
+            result['stats']['Avg. Procs/Shot'] = statusChance * projectiles;
+            result['stats']['Projectiles'] = projectiles;
+            result['stats']['Time Firing'] = (magazineCapacity / fireRate)/((magazineCapacity / fireRate) + reloadSpeed);
             
-            result['ancientDps'] = infestedAncient.getDamageTaken(result, 25, corrosiveProjection);
-            result['napalmDps'] = grineerNapalm.getDamageTaken(result, 25, corrosiveProjection);
-            result['techDps'] = corpusTech.getDamageTaken(result, 25, corrosiveProjection);
-            result['moaDps'] = corpusMoa.getDamageTaken(result, 25, corrosiveProjection);
+            //result['ancientDps'] = infestedAncient.getDamageTaken(result, 25, corrosiveProjection);
+            //result['napalmDps'] = grineerNapalm.getDamageTaken(result, 25, corrosiveProjection);
+            //result['techDps'] = corpusTech.getDamageTaken(result, 25, corrosiveProjection);
+            //result['moaDps'] = corpusMoa.getDamageTaken(result, 25, corrosiveProjection);
+            result['infestedDps'] = infested.getDamageTaken(result, 25, corrosiveProjection);
+            result['grineerDps'] = grineer.getDamageTaken(result, 25, corrosiveProjection);
+            result['corpusDps'] = corpus.getDamageTaken(result, 25, corrosiveProjection);
+            result['corruptedDps'] = corrupted.getDamageTaken(result, 25, corrosiveProjection);
             var apDps = 0; //new Enemies.AncientDisruptor().getDamageTaken(result, 200, corrosiveProjection);
             result['apdps'] = apDps;
             
-            result['ancient'] = infestedAncient;
-            result['napalm'] = grineerNapalm;
-            result['tech'] = corpusTech;
-            result['moa'] = corpusMoa;
-            
+//            result['ancient'] = infestedAncient;
+//            result['napalm'] = grineerNapalm;
+//            result['tech'] = corpusTech;
+//            result['moa'] = corpusMoa;
+            result['infested'] = infested;
+            result['grineer'] = grineer;
+            result['corpus'] = corpus;
+            result['corrupted'] = corrupted;
             
             return result;
         },
@@ -337,24 +314,24 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             var modPercentages = this.getCalculatedModPercentages();
             var enemy = new Enemies.Enemy();
             var weaponResult = weapon.getDps(modPercentages, enemy);
-            var ancientMaxDps = 0;
-            var napalmMaxDps = 0;
-            var techMaxDps = 0;
-            var moaMaxDps = 0;
+            var infestedMaxDps = 0;
+            var grineerMaxDps = 0;
+            var corpusMaxDps = 0;
+            var corruptedMaxDps = 0;
             
             // Set max DPS
-            for(var key in weaponResult.ancientDps){
-                if(ancientMaxDps < weaponResult.ancientDps[key]['DPS']){
-                    ancientMaxDps = weaponResult.ancientDps[key]['DPS'];
+            for(var key in weaponResult.infestedDps){
+                if(infestedMaxDps < weaponResult.infestedDps[key]['DPS']){
+                    infestedMaxDps = weaponResult.infestedDps[key]['DPS'];
                 }
-                if(napalmMaxDps < weaponResult.napalmDps[key]['DPS']){
-                    napalmMaxDps = weaponResult.napalmDps[key]['DPS'];
+                if(grineerMaxDps < weaponResult.grineerDps[key]['DPS']){
+                    grineerMaxDps = weaponResult.grineerDps[key]['DPS'];
                 }
-                if(techMaxDps < weaponResult.techDps[key]['DPS']){
-                    techMaxDps = weaponResult.techDps[key]['DPS'];
+                if(corpusMaxDps < weaponResult.corpusDps[key]['DPS']){
+                    corpusMaxDps = weaponResult.corpusDps[key]['DPS'];
                 }
-                if(moaMaxDps < weaponResult.moaDps[key]['DPS']){
-                    moaMaxDps = weaponResult.moaDps[key]['DPS'];
+                if(corruptedMaxDps < weaponResult.corruptedDps[key]['DPS']){
+                    corruptedMaxDps = weaponResult.corruptedDps[key]['DPS'];
                 }
             }
             
@@ -363,14 +340,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             this.set('apdps', weaponResult.apdps);
             this.set('burst', weaponResult.burst);
             this.set('shot', weaponResult.shot);
-            this.set('ancient', ancientMaxDps);
-            this.set('napalm', napalmMaxDps);
-            this.set('tech', techMaxDps);
-            this.set('moa', moaMaxDps);
-            this.set('ancientAltsDps', weaponResult.ancientDps);
-            this.set('napalmAltsDps', weaponResult.napalmDps);
-            this.set('techAltsDps', weaponResult.techDps);
-            this.set('moaAltsDps', weaponResult.moaDps);
+            this.set('procs', weaponResult.procs);
+            this.set('infested', infestedMaxDps);
+            this.set('grineer', grineerMaxDps);
+            this.set('corpus', corpusMaxDps);
+            this.set('corrupted', corruptedMaxDps);
+            this.set('void', corruptedMaxDps);
+            this.set('infestedAltsDps', weaponResult.infestedDps);
+            this.set('grineerAltsDps', weaponResult.grineerDps);
+            this.set('corpusAltsDps', weaponResult.corpusDps);
+            this.set('corruptedAltsDps', weaponResult.corruptedDps);
             
             var baseDps = weaponResult.dps;
             var baseApDps = weaponResult.apdps;
@@ -463,10 +442,11 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             this.sort_asc['name'] = true;
             this.sort_asc['dps'] = false;
             this.sort_asc['shot'] = false;
-            this.sort_asc['ancient'] = false;
-            this.sort_asc['napalm'] = false;
-            this.sort_asc['tech'] = false;
-            this.sort_asc['moa'] = false;
+            this.sort_asc['procs'] = false;
+            this.sort_asc['infested'] = false;
+            this.sort_asc['grineer'] = false;
+            this.sort_asc['corpus'] = false;
+            this.sort_asc['void'] = false;
             this.secondary_sort_key = 'dps';
             this.secondary_sort_key = 'desc';
        },
@@ -533,7 +513,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 return damage;
             }
         })),
-
+        
         new (Afuris = Weapon.extend({
            initialize:function(){
              this.set('modules', Modules.getNewPistolModCollection());
@@ -572,7 +552,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Fire Rate' : 10, 
             'Magazine Capacity' : 30, 
             'Reload Speed' : 2.6, 
-            'Crit Chance' : 0.025, 
+            'Crit Chance' : 0.05,
             'Crit Damage' : 2.0  
            }
         })),
@@ -618,6 +598,27 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Magazine Capacity' : 12, 
             'Reload Speed' : 3, 
             'Crit Chance' : 0.20, 
+            'Crit Damage' : 2.0  
+           }
+        })),
+        
+        new (Akmagnus = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewPistolModCollection('akmagnus'));
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Akmagnus",
+            masteryRank:0,
+            'Impact':20.25,
+            'Piercing':12.375,
+            'Slashing':12.375,
+            'Status Chance':25,
+            'Fire Rate' : 8.33,
+            'Magazine Capacity' : 16, 
+            'Reload Speed' : 3.0, 
+            'Crit Chance' : 0.25,
             'Crit Damage' : 2.0  
            }
         })),
@@ -680,7 +681,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Fire Rate' : 6.83, 
             'Magazine Capacity' : 15, 
             'Reload Speed' : 2.3, 
-            'Crit Chance' : 0.025,
+            'Crit Chance' : 0.05,
             'Crit Damage' : 2.0  
            }
         })),
@@ -694,7 +695,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Brakk",
             masteryRank:0,
-            projectiles:10,
+            Projectiles:10,
             'Impact':67.5,
             'Piercing':37.5,
             'Slashing':45,
@@ -717,7 +718,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Bronco",
             masteryRank:0,
-            projectiles:7,
+            Projectiles:7,
             'Impact':84,
             'Piercing':10.5,
             'Slashing':10.5,
@@ -740,7 +741,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Bronco Prime",
             masteryRank:0,
-            projectiles:7,
+            Projectiles:7,
             'Impact':112,
             'Piercing':14,
             'Slashing':14,
@@ -799,26 +800,26 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
         
-//        new (Detron = Weapon.extend({
-//           initialize:function(){
-//             //console.log("Despair init!");
-//             this.set('modules', Modules.getNewPistolModCollection());
-//             this.constructor.__super__.initialize.apply(this);
-//           },
-//           defaults:{
-//            weaponType:"pistol", 
-//            name : "Detron",
-//            masteryRank:0,
-//            projectiles:6,
-//            'Radiation':105,
-//            'Status Chance':5, 
-//            'Fire Rate' : 3.3, 
-//            'Magazine Capacity' : 5, 
-//            'Reload Speed' : 1.0, 
-//            'Crit Chance' : 0.1, 
-//            'Crit Damage' : 1.5  
-//           }
-//        })),
+        new (Detron = Weapon.extend({
+           initialize:function(){
+             //console.log("Despair init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Detron",
+            masteryRank:0,
+            Projectiles:7,
+            'Radiation':105,
+            'Status Chance':10, 
+            'Fire Rate' : 3.3, 
+            'Magazine Capacity' : 5, 
+            'Reload Speed' : 1.0, 
+            'Crit Chance' : 0.1, 
+            'Crit Damage' : 1.5  
+           }
+        })),
 
         new (DualBroncos = Weapon.extend({
            initialize:function(){
@@ -830,7 +831,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Dual Broncos",
             masteryRank:0,
-            projectiles:7,
+            Projectiles:7,
             'Impact':84,
             'Piercing':10.5,
             'Slashing':10.5,
@@ -843,7 +844,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
 
-        new (DualVastos = Weapon.extend({
+        new (Akvasto = Weapon.extend({
            initialize:function(){
              //console.log("Dual Vastos init!");
              this.set('modules', Modules.getNewPistolModCollection());
@@ -851,17 +852,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            },
            defaults:{
             weaponType:"pistol", 
-            name : "Dual Vastos",
+            name : "Akvasto",
             masteryRank:0,
-            damageType:"Bullet",
-            prettyDamageType:"Bullet",
             'Impact':12.5,
             'Piercing':12.5,
             'Slashing':25,
             'Status Chance':5,
             'Fire Rate' : 10, 
             'Magazine Capacity' : 12, 
-            'Reload Speed' : 2, 
+            'Reload Speed' : 1.75, 
             'Crit Chance' : 0.15, 
             'Crit Damage' : 1.5  
            }
@@ -878,9 +877,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Embolist",
             masteryRank:8,
-            'Toxic':8.8,
-            'Status Chance':1,
-            'Fire Rate' : 17,
+            'Toxic':15,
+            'Status Chance':10,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 100, 
             'Reload Speed' : 1.5, 
             'Crit Chance' : 0.025, 
@@ -1187,14 +1186,60 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Stug",
             masteryRank:0,
-            'Corrosive':156,
+            'Corrosive':75,
             'Status Chance':2,
-            'Fire Rate' : 0.3,
-            'Magazine Capacity' : 50,
+            'Fire Rate' : 6.67,
+            'Magazine Capacity' : 20,
             'Reload Speed' : 2.0, 
             'Crit Chance' : 0.0, 
             'Crit Damage' : 2.0  
-           }
+           },
+           specialDamageCalculations:function(damageBreakdown, module_types){
+                var baseDamage = this.get('Corrosive') * (100 + module_types['Damage']) / 100;
+                baseDamage = baseDamage * (100 + module_types['Faction Damage']) / 100;
+                
+                var damage = {};
+                damage['DoT'] = {};
+                damage['DoT']['damageBreakdown'] = {};
+                // 6% base damage per tick for 2 ticks
+                damage['DoT']['damageBreakdown']['Corrosive'] =  baseDamage * 0.06 * 2;
+                damage['DoT']['ticks'] = 2;
+                damage['DoT']['ticksPerSecond'] = 1;
+                return damage;
+            }
+        })),
+        
+        new (StugCharge = Weapon.extend({
+           initialize:function(){
+             //console.log("Spectra init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Stug (charge)",
+            masteryRank:0,
+            'Corrosive':450,
+            'Status Chance':2,
+            'Fire Rate' : 0.33,
+            'Magazine Capacity' : 2,
+            'Reload Speed' : 2.0, 
+            'Crit Chance' : 0.0, 
+            'Crit Damage' : 2.0  
+           },
+           specialDamageCalculations:function(damageBreakdown, module_types){
+                var baseDamage = this.get('Corrosive') * (100 + module_types['Damage']) / 100;
+                baseDamage = baseDamage * (100 + module_types['Faction Damage']) / 100;
+                
+                var damage = {};
+                damage['DoT'] = {};
+                damage['DoT']['damageBreakdown'] = {};
+                // 6% base damage per tick for 2 ticks
+                damage['DoT']['damageBreakdown']['Corrosive'] =  baseDamage * 0.06 * 2;
+                damage['DoT']['ticks'] = 2;
+                damage['DoT']['ticksPerSecond'] = 1;
+                return damage;
+            }
         })),
 
         new (TwinGremlins = Weapon.extend({
@@ -1240,6 +1285,26 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Crit Damage' : 1.5  
            }
         })),
+        
+        new (Tysis = Weapon.extend({
+           initialize:function(){
+             //console.log("Twin Vipers init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Tysis",
+            masteryRank:4,
+            'Corrosive':35.0,
+            'Status Chance':50,
+            'Fire Rate' : 2.5,
+            'Magazine Capacity' : 15, 
+            'Reload Speed' : 1.2, 
+            'Crit Chance' : 0.025, 
+            'Crit Damage' : 1.5  
+           }
+        })),
 
         new (Vasto = Weapon.extend({
            initialize:function(){
@@ -1282,6 +1347,28 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Reload Speed' : 1.1, 
             'Crit Chance' : 0.15, 
             'Crit Damage' : 1.5  
+           }
+        })),
+        
+        new (WraithTwinVipers = Weapon.extend({
+           initialize:function(){
+             //console.log("Twin Vipers init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Wraith Twin Vipers",
+            masteryRank:0,
+            'Impact':14.4,
+            'Piercing':1.8,
+            'Slashing':1.8,
+            'Status Chance':5,
+            'Fire Rate' : 25.0,
+            'Magazine Capacity' : 40, 
+            'Reload Speed' : 2.0, 
+            'Crit Chance' : 0.18, 
+            'Crit Damage' : 2.0  
            }
         })),
 
@@ -1452,7 +1539,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              'Piercing':1.5,
              'Slashing':12,
              'Status Chance':9,
-             'Fire Rate' : 10.8, 
+             'Fire Rate' : 10, 
              'Magazine Capacity' : 100, 
              'Reload Speed' : 2.0, 
              'Crit Chance' : 0.05, 
@@ -1535,9 +1622,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              weaponType:"rifle", 
              name : "Ignis",
              masteryRank:4,
-             'Fire':8.5,
+             'Fire':10,
              'Status Chance':1,
-             'Fire Rate' : 11.7, 
+             'Fire Rate' : 10, 
              'Magazine Capacity' : 100, 
              'Reload Speed' : 2.0, 
              'Crit Chance' : 0.05, 
@@ -1705,7 +1792,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            defaults:{
             weaponType:"rifle", 
             name : "Soma",
-            masteryRank:3,
+            masteryRank:6,
             'Impact':1,
             'Piercing':4,
             'Slashing':5,
@@ -1750,13 +1837,34 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"rifle", 
             name : "Synapse",
             masteryRank:6,
-            'Electrical':9.4,
+            'Electrical':12.5,
             'Status Chance':10,
-            'Fire Rate' : 13.3,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 100, 
             'Reload Speed' : 1.5,
             'Crit Chance' : 0.5, 
             'Crit Damage' : 2.0
+           }
+        })),
+        
+        new (Tetra = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewRifleModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            continous:true,
+            weaponType:"rifle", 
+            name : "Tetra",
+            masteryRank:0,
+            'Impact':6,
+            'Piercing':24,
+            'Status Chance':10,
+            'Fire Rate' : 6.67,
+            'Magazine Capacity' : 60, 
+            'Reload Speed' : 2.0,
+            'Crit Chance' : 0.025, 
+            'Crit Damage' : 1.5
            }
         })),
 
@@ -1807,7 +1915,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Boar",
             masteryRank:2,
-            projectiles:6,
+            Projectiles:6,
             'Impact':52.8,
             'Piercing':14.4,
             'Slashing':28.8,
@@ -1829,7 +1937,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Boar Prime",
             masteryRank:0,
-            projectiles:9,
+            Projectiles:9,
             'Impact':76,
             'Piercing':17.6,
             'Slashing':23.4,
@@ -1838,6 +1946,50 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Magazine Capacity' : 15,
             'Reload Speed' : 2.3,
             'Crit Chance' : 0.15,
+            'Crit Damage' : 2.0
+           }
+        })),
+        
+        new (Drakgoon = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewShotgunModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"shotgun", 
+            name : "Drakgoon",
+            Projectiles:10,
+            masteryRank:0,
+            'Impact':30,
+            'Piercing':30,
+            'Slashing':90,
+            'Status Chance':10,
+            'Fire Rate' : 3.33,
+            'Magazine Capacity' : 7,
+            'Reload Speed' : 2.3,
+            'Crit Chance' : 0.05,
+            'Crit Damage' : 2.0
+           }
+        })),
+        
+        new (DrakgoonCharge = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewShotgunModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"shotgun", 
+            name : "Drakgoon (charge)",
+            Projectiles:10,
+            masteryRank:0,
+            'Impact':25,
+            'Piercing':25,
+            'Slashing':200,
+            'Status Chance':10,
+            'Fire Rate' : 0.8,
+            'Magazine Capacity' : 7,
+            'Reload Speed' : 2.3,
+            'Crit Chance' : 0.075,
             'Crit Damage' : 2.0
            }
         })),
@@ -1850,7 +2002,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            defaults:{
             weaponType:"shotgun", 
             name : "Hek",
-            projectiles:7,
+            Projectiles:7,
             masteryRank:4,
             'Impact':21,
             'Piercing':91,
@@ -1873,7 +2025,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Sobek",
             masteryRank:4,
-            projectiles:4,
+            Projectiles:4,
             'Impact':90,
             'Piercing':15,
             'Slashing':15,
@@ -1895,7 +2047,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Strun",
             masteryRank:1,
-            projectiles:10,
+            Projectiles:10,
             'Impact':66,
             'Piercing':18,
             'Slashing':36,
@@ -1917,7 +2069,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Strun Wraith",
             masteryRank:0,
-            projectiles:8,
+            Projectiles:8,
             'Impact':97.5,
             'Piercing':22.5,
             'Slashing':30,
@@ -1939,7 +2091,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"shotgun", 
             name : "Tigris",
             masteryRank:0,
-            projectiles:4,
+            Projectiles:4,
             'Impact':18,
             'Piercing':18,
             'Slashing':144,
@@ -2297,7 +2449,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"sentinel", 
             name : "Burst Laser",
             masteryRank:0,
-            'Impact':0.6,
+            'Impact':0.7,
             'Piercing':6.0,
             'Slashing':0.3,
             'Status Chance':2, 
@@ -2320,7 +2472,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:0,
             'Impact':0.5,
             'Piercing':0.3,
-            'Slashing':4.3,
+            'Slashing':4.2,
             'Status Chance':1, 
             'Fire Rate' : 8.3,
             'Magazine Capacity' : 100,
@@ -2344,7 +2496,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Slashing':0.3,
             'Status Chance':2, 
             'Fire Rate' : 6.7,
-            'Magazine Capacity' : 32,
+            'Magazine Capacity' : 5,
             'Reload Speed' : 2.0,
             'Crit Chance' : 0,
             'Crit Damage' : 1.5
@@ -2361,9 +2513,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             name : "Stinger",
             masteryRank:0,
             'Toxic':15,
-            'Status Chance':2, 
+            'Status Chance':5, 
             'Fire Rate' : 3.3,
-            'Magazine Capacity' : 15,
+            'Magazine Capacity' : 4,
             'Reload Speed' : 1.2,
             'Crit Chance' : 0.025,
             'Crit Damage' : 1.5
@@ -2379,13 +2531,13 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"sentinel", 
             name : "Sweeper",
             masteryRank:0,
-            projectiles:6,
-            'Impact':35.5,
+            Projectiles:6,
+            'Impact':35.7,
             'Piercing':2.1,
             'Slashing':4.2,
             'Status Chance':2, 
             'Fire Rate' : 1.0,
-            'Magazine Capacity' : 1,
+            'Magazine Capacity' : 10,
             'Reload Speed' : 2.3,
             'Crit Chance' : 0.05,
             'Crit Damage' : 1.5

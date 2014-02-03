@@ -9,9 +9,9 @@
     </head>
     <body>
         <div class="links"><div class="cell link"><a href="http://www.warframe.com">Warframe.com</a></div><div class="cell link"><a href="http://www.reddit.com/r/warframe">reddit r/Warframe</a></div><div class="cell link"><a href="http://www.reddit.com/r/Warframe/comments/1sdx2e/dpsframe_is_now_updated_for_damage_20/">(new) discussion thread on reddit</a></div></div>
-        <div class="notes">Updated for Damage 2.0! (Update 11.5.4) dpsframe 11.5.4 rev. 3 <a href="https://forums.warframe.com/index.php?/topic/118754-a-web-based-dps-tool/page-2#entry1782591">changelog</a><br></div>
+        <div class="notes">Updated for Damage 2.0! (Update 11.9.2) dpsframe 11.9.2 rev. 5 <a href="https://forums.warframe.com/index.php?/topic/118754-a-web-based-dps-tool/#entry1993805">changelog</a><br></div>
         <div id="optionsContainer" class="box"></div>
-        <div id="weaponContainer" class="weapon"></div>
+        <div id="weaponContainer" class="weapon">Loading..</div>
         <script type="text/template" id="weaponTemplate">
             <%var color_class = ""%>
             <% if (categoryName === "Favorite") { color_class = "fav" }%>
@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <div class="mastery">
-                    <span class="expandeddps">Burst: <%= result.burst.toFixed(0)%> DPS, Ancient: <%= weapon.get('ancient').toFixed(0)%> DPS, Napalm: <%= weapon.get('napalm').toFixed(0)%> DPS, Tech: <%= weapon.get('tech').toFixed(0)%> DPS, MOA: <%= weapon.get('moa').toFixed(0)%> DPS</span>
+                    <span class="expandeddps">Burst: <%= result.burst.toFixed(0)%> DPS, Infested: <%= weapon.get('infested').toFixed(0)%> DPS, Grineer <%= weapon.get('grineer').toFixed(0)%> DPS, Corpus <%= weapon.get('corpus').toFixed(0)%> DPS, Void <%= weapon.get('corrupted').toFixed(0)%> DPS</span>
                     
                     <br>
                     Mastery rank: <%= weapon.get('masteryRank')%>
@@ -114,9 +114,15 @@
                     <%for(var key in result['stats']){%>
                         <%var stat_name = key %>
                         <%var stat_value = result['stats'][key] %>
-                        <%if(stat_name === "Crit Damage") {
+                        <%if((stat_name === "Crit Damage")) {
                             stat_value = (stat_value *= 100).toFixed(0) + "%";
-                          } else if((stat_name === "Crit Chance") || (stat_name === "Status Chance")){
+                          } else if((stat_name === "Crit Chance") || (stat_name === "Time Firing")){
+                            stat_value = (stat_value *= 100).toFixed(2) + "%";
+                          } else if(stat_name === "Status Probability"){
+                            stat_value = stat_value.toFixed(2) + "%";
+                          } else if(stat_name === "Status Chance"){
+                            var proc_chances =((weapon.get('Projectiles') || 1.0) * (1 + result['Multishot'] / 100));
+                            stat_name += " (" + proc_chances.toFixed(1) + "x)";
                             stat_value = (stat_value *= 100).toFixed(2) + "%";
                           } else {
                             stat_value = stat_value.toFixed(2);
@@ -151,14 +157,30 @@
                            </tr>
                             <%for(var key in result['stats']){%>
                                 <%var stat_name = key %>
-                                <%var stat_value = weapon.get(key) %>
+                                <%var stat_value = weapon.get(key) || 0; %>
                                 <%if(stat_name === "Crit Damage") {
                                     stat_value = (stat_value *= 100).toFixed(0) + "%";
                                   } else if(stat_name === "Crit Chance"){
                                     stat_value = (stat_value *= 100).toFixed(2) + "%";
+                                  } else if(stat_name === "Status Probability"){
+                                    var proc_chances = (weapon.get('Projectiles') || 1.0);
+                                    stat_value = ((1 - (Math.pow(1 - (weapon.get('Status Chance') / 100), proc_chances)))*100).toFixed(2) + "%";
                                   } else if(stat_name === "Status Chance"){
+                                    var proc_chances = (weapon.get('Projectiles') || 1.0);
+                                    stat_name += " (" + proc_chances.toFixed(1) + "x)";
                                     stat_value = stat_value.toFixed(2) + "%";
-                                  }else {
+                                  } else if(stat_name === "Avg. Procs/Shot"){
+                                    stat_value = (weapon.get('Projectiles') || 1.0) * (weapon.get('Status Chance') / 100 || 0);
+                                    stat_value = stat_value.toFixed(2);
+                                  } else if(stat_name === "Time Firing"){
+                                    stat_value = (weapon.get('Magazine Capacity') / weapon.get('Fire Rate'))/((weapon.get('Magazine Capacity') / weapon.get('Fire Rate')) + weapon.get('Reload Speed'));
+                                    stat_value = (stat_value *= 100).toFixed(2) + "%";
+                                  } else if(stat_name === "Projectiles"){
+                                    if(stat_value === 0){
+                                        stat_value = 1;
+                                    }
+                                    stat_value = stat_value.toFixed(2);
+                                  } else {
                                     stat_value = stat_value.toFixed(2);
                                   }%>
                                 <tr>
@@ -171,140 +193,50 @@
                     </div>
                 </div>
                 <div class="cell">
-                    <% var ancientAlts = weapon.get('ancientAltsDps');%>
-                    <% var napalmAlts = weapon.get('napalmAltsDps');%>
-                    <% var techAlts = weapon.get('techAltsDps');%>
-                    <% var moaAlts = weapon.get('moaAltsDps');%>
-                    <% var ancientMods = result['ancient'].get('damageMultipliers');%>
-                    <% var napalmArmorMods = result['napalm'].get('armorMultipliers');%>
-                    <% var napalmHealthMods = result['napalm'].get('damageMultipliers');%>
-                    <% var techShieldMods = result['tech'].get('shieldMultipliers');%>
-                    <% var techHealthMods = result['tech'].get('damageMultipliers');%>
-                    <% var moaShieldMods = result['moa'].get('shieldMultipliers');%>
-                    <% var moaHealthMods = result['moa'].get('damageMultipliers');%>
+                    <% var infestedAlts = weapon.get('infestedAltsDps');%>
+                    <% var grineerAlts = weapon.get('grineerAltsDps');%>
+                    <% var corpusAlts = weapon.get('corpusAltsDps');%>
+                    <% var corruptedAlts = weapon.get('corruptedAltsDps');%>
+                    <% var infestedMods = result['infested'].get('damageMultipliers');%>
+                    <% var grineerArmorMods = result['grineer'].get('armorMultipliers');%>
+                    <% var grineerHealthMods = result['grineer'].get('damageMultipliers');%>
+                    <% var corpusShieldMods = result['corpus'].get('shieldMultipliers');%>
+                    <% var corpusHealthMods = result['corpus'].get('damageMultipliers');%>
+                    <% var corruptedArmorMods = result['corrupted'].get('armorMultipliers');%>
+                    <% var corruptedShieldMods = result['corrupted'].get('shieldMultipliers');%>
+                    <% var corruptedHealthMods = result['corrupted'].get('damageMultipliers');%>
                     <table class="scaling">
                        <thead>
                             <tr>
-                                <th>Type</th><th class="ancient right">Ancient</th>
-                                <th class="napalm right">Napalm</th>
-                                <th class="tech right">Tech</th>
-                                <th class="moa right">MOA</th>
+                                <th>Type</th>
+                                <th class="infested right"><span class="dotted">Infested</span></th>
+                                <th class="grineer right"><span class="dotted">Grineer</span></th>
+                                <th class="corpus right"><span class="dotted">Corpus</span></th>
+                                <th class="corrupted right"><span class="dotted">Void</span></th>
                             </tr>
                             </thead>
                          <tbody>
-                            <%for(var key in ancientAlts){%>
+                            <%for(var key in infestedAlts){%>
                                 <tr>
-                                    <td><%= key %></td><td class="right"><%= ancientAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= napalmAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= techAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= moaAlts[key]['DPS'].toFixed(0)%></td>
+                                    <td><%= key %></td><td class="right"><%= infestedAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= grineerAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= corpusAlts[key]['DPS'].toFixed(0)%></td><td class="right"><%= corruptedAlts[key]['DPS'].toFixed(0)%></td>
                                 </tr>
                             <%}%>
                         </tbody>
                     </table>
                     <div class="popupContainer">
-                        <div class="popup enemies ancient hidden">
-                            <table class="enemies">
-                            <thead>
-                            <tr>
-                                <th>Ancient</th><th class="right">Fossilized</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                <%for(var key in result['damageBreakdown']){%>
-                                <tr>
-                                    <td><%= key %></td>
-                                    <% if(ancientMods[key]) {%>
-                                        <td class="right"><span class="<%= (ancientMods[key] < 0) ? "red" : "green" %>"><%= ancientMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                </tr>
-                            <%}%>
-                           </tbody>
-                            </table>
+                        <div class="popup enemies infested hidden">
                         </div>
                     </div>
                     <div class="popupContainer">
-                        <div class="popup enemies napalm hidden">
-                            <table class="enemies">
-                            <thead>
-                            <tr>
-                                <th>Napalm</th><th class="right">Alloy</th><th class="right">Cloned</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                <%for(var key in result['damageBreakdown']){%>
-                                <tr>
-                                    <td><%= key %></td>
-                                    <% if(napalmArmorMods[key]) {%>
-                                        <td class="right"><span class="<%= (napalmArmorMods[key] < 0) ? "red" : "green" %>"><%= napalmArmorMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                    <% if(napalmHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (napalmHealthMods[key] < 0) ? "red" : "green" %>"><%= napalmHealthMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                </tr>
-                            <%}%>
-                           </tbody>
-                           </table>
-                           <span>Armor Note:<br>In 11.3.3 a 0.75 factor<br> means 100 armor drops<br>to 25 (armor * 1-0.75)<br> and it also gives a 75% <br>damage factor.</span>
+                        <div class="popup enemies grineer hidden">
                         </div>
                     </div>
                     <div class="popupContainer">
-                        <div class="popup enemies tech hidden">
-                            <table class="enemies">
-                            <thead>
-                            <tr>
-                                <th>Tech</th><th class="right">Proto</th><th class="right">Flesh</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                <%for(var key in result['damageBreakdown']){%>
-                                <tr>
-                                    <td><%= key %></td>
-                                    <% if(techShieldMods[key]) {%>
-                                        <td class="right"><span class="<%= (techShieldMods[key] < 0) ? "red" : "green" %>"><%= techShieldMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                    <% if(techHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (techHealthMods[key] < 0) ? "red" : "green" %>"><%= techHealthMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                </tr>
-                            <%}%>
-                           </tbody>
-                            </table>
+                        <div class="popup enemies corpus hidden">
                         </div>
                     </div>
                     <div class="popupContainer">
-                        <div class="popup enemies moa hidden">
-                            <table class="enemies">
-                            <thead>
-                            <tr>
-                                <th>Moa</th><th class="right">Shield</th><th class="right">Robotic</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                <%for(var key in result['damageBreakdown']){%>
-                                <tr>
-                                    <td><%= key %></td>
-                                    <% if(moaShieldMods[key]) {%>
-                                        <td class="right"><span class="<%= (moaShieldMods[key] < 0) ? "red" : "green" %>"><%= moaShieldMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                    <% if(moaHealthMods[key]) {%>
-                                        <td class="right"><span class="<%= (moaHealthMods[key] < 0) ? "red" : "green" %>"><%= moaHealthMods[key].toFixed(2)%></span></td>
-                                    <%} else {%>
-                                        <td class="right">-</td>
-                                    <%}%>
-                                </tr>
-                            <%}%>
-                           </tbody>
-                            </table>
+                        <div class="popup enemies corrupted hidden">
                         </div>
                     </div>
                 </div>
@@ -321,6 +253,313 @@
                 </div>
                 <div class="cell modules">
                 </div>
+            </div>
+        </script>
+        <script type="text/template" id="infestedFactionDamageTemplate">
+            <% var infestedMods = alts.infested.get('damageMultipliers');%>
+            <% var disrupterMods = alts.disrupter.get('damageMultipliers');%>
+            <% var healerMods = alts.healer.get('damageMultipliers');%>
+            <% var chargerMods = alts.charger.get('damageMultipliers');%>
+            <% var runnerMods = alts.runner.get('damageMultipliers');%>
+            <div class="factionWrapper">
+                <div class="factiondamage">
+                 <div class="noselect">
+                    <table class="scaling infestedDamageType">
+                       <thead>
+                            <tr>
+                                <th class="infestedDamageType">Type</th>
+                                <th class="right">Disrupter (Fo)</th>
+                                <th class="right">Healer (S)</th>
+                                <th class="right">Charger (I)</th>
+                                <th class="right">Runner (Fl)</th>
+                            </tr>
+                            </thead>
+                         <tbody>
+                            <%for(var key in alts['disrupterResult']){%>
+                                <tr>
+                                    <td><%= key %></td><td class="right"><%= alts['disrupterResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['healerResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['chargerResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['runnerResult'][key]['DPS'].toFixed(0)%></td>
+                                </tr>
+                            <%}%>
+                        </tbody>
+                    </table>
+                 </div>
+               </div>
+               
+                <div class="">
+                    <table class="enemies">
+                    <thead>
+                    <tr>
+                        <th class="damageType">Infested</th><th class="right">Average Health</th><th class="right">Fossilized</th><th class="right">Sinew</th><th class="right">Infested</th><th class="right">Flesh</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <%for(var key in result['damageBreakdown']){%>
+                        <%if(key.indexOf("DoT") === -1){%>
+                            <tr>
+                                <td><%= key %></td>
+                                <% if((infestedMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (infestedMods[key] < 0) ? "red" : "green" %>"><%= infestedMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((disrupterMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (disrupterMods[key] < 0) ? "red" : "green" %>"><%= disrupterMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((healerMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (healerMods[key] < 0) ? "red" : "green" %>"><%= healerMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((chargerMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (infestedMods[key] < 0) ? "red" : "green" %>"><%= chargerMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((runnerMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (infestedMods[key] < 0) ? "red" : "green" %>"><%= runnerMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                            </tr>
+                        <%}%>
+                    <%}%>
+                   </tbody>
+                   </table>
+               </div>
+               
+            </div>
+        </script>
+        <script type="text/template" id="grineerFactionDamageTemplate">
+            <% var grineerMods = alts.grineer.get('damageMultipliers');%>
+            <% var grineerArmorMods = alts.grineer.get('armorMultipliers');%>
+            <% var napalmMods = alts.napalm.get('damageMultipliers');%>
+            <% var napalmArmorMods = alts.napalm.get('armorMultipliers');%>
+            <% var lancerMods = alts.lancer.get('damageMultipliers');%>
+            <% var lancerArmorMods = alts.lancer.get('armorMultipliers');%>
+            <div class="factionWrapper">
+                <div class="factiondamage">
+                 <div class="noselect">
+                    <table class="scaling grineerDamageType">
+                       <thead>
+                            <tr>
+                                <th class="grineerDamageType">Type</th>
+                                <th class="right armor">Heavy Gunner (F)</th>
+                                <th class="right armor">Napalm (A)</th>
+                                <th class="right armor">&nbsp;Lancer (F)</th>
+                            </tr>
+                            </thead>
+                         <tbody>
+                            <%for(var key in alts['napalmResult']){%>
+                                <tr>
+                                    <td><%= key %></td><td class="right"><%= alts['gunnerResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['napalmResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['lancerResult'][key]['DPS'].toFixed(0)%></td>
+                                </tr>
+                            <%}%>
+                        </tbody>
+                    </table>
+                 </div>
+               </div>
+               
+                <div class="">
+                    <table class="enemies">
+                    <thead>
+                    <tr>
+                        <th class="grineerDamageType">Grineer</th><th class="right armor">Avg. Armor</th><th class="right health">Cloned</th><th class="right armor">&nbsp;&nbsp;&nbsp;&nbsp;Alloy</th><th class="right armor">&nbsp;&nbsp;&nbsp;Ferrite</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <%for(var key in result['damageBreakdown']){%>
+                        <%if(key.indexOf("DoT") === -1){%>
+                            <tr>
+                                <td><%= key %></td>
+                                <% if((grineerArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (grineerArmorMods[key] < 0) ? "red" : "green" %>"><%= grineerArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((napalmMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (napalmMods[key] < 0) ? "red" : "green" %>"><%= napalmMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((napalmArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (napalmArmorMods[key] < 0) ? "red" : "green" %>"><%= napalmArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                 <% if((lancerArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (lancerArmorMods[key] < 0) ? "red" : "green" %>"><%= lancerArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                            </tr>
+                        <%}%>
+                    <%}%>
+                   </tbody>
+                   </table>
+                </div>
+               
+            </div>
+            
+        </script>
+        <script type="text/template" id="corpusFactionDamageTemplate">
+            <% var corpusMods = alts.corpus.get('damageMultipliers');%>
+            <% var corpusShieldMods = alts.corpus.get('shieldMultipliers');%>
+            <% var techMods = alts.tech.get('damageMultipliers');%>
+            <% var techShieldMods = alts.tech.get('shieldMultipliers');%>
+            <% var crewmanMods = alts.crewman.get('damageMultipliers');%>
+            <% var crewmanShieldMods = alts.crewman.get('shieldMultipliers');%>
+            <% var moaMods = alts.moa.get('damageMultipliers');%>
+            <% var moaShieldMods = alts.moa.get('shieldMultipliers');%>
+            <div class="factionWrapper">
+                <div class="factiondamage">
+                 <div class="noselect">
+                    <table class="scaling corpusDamageType">
+                       <thead>
+                            <tr>
+                                <th class="corpusDamageType">Type</th>
+                                <th class="right shield">Crewman (S)</th>
+                                <th class="right shield">Tech (P)</th>
+                                <th class="right shield">&nbsp;&nbsp;Moa (S)</th>
+                            </tr>
+                            </thead>
+                         <tbody>
+                            <%for(var key in alts['crewmanResult']){%>
+                                <tr>
+                                    <td><%= key %></td><td class="right"><%= alts['crewmanResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['techResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['moaResult'][key]['DPS'].toFixed(0)%></td>
+                                </tr>
+                            <%}%>
+                        </tbody>
+                    </table>
+                 </div>
+               </div>
+            
+                <div class="">
+                    <table class="enemies">
+                    <thead>
+                    <tr>
+                        <th class="">Corpus</th><th class="right health">Avg. H</th><th class="right shield">Avg. S</th><th class="right health">Flesh</th><th class="right shield">Shield</th><th class="right shield">Proto</th><th class="right health">Robotic</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <%for(var key in result['damageBreakdown']){%>
+                        <%if(key.indexOf("DoT") === -1){%>
+                            <tr>
+                                <td><%= key %></td>
+                                <% if((corpusMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (corpusMods[key] < 0) ? "red" : "green" %>"><%= corpusMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((corpusShieldMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (corpusShieldMods[key] < 0) ? "red" : "green" %>"><%= corpusShieldMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((crewmanMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (crewmanMods[key] < 0) ? "red" : "green" %>"><%= crewmanMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((crewmanShieldMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (crewmanShieldMods[key] < 0) ? "red" : "green" %>"><%= crewmanShieldMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((techShieldMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (techShieldMods[key] < 0) ? "red" : "green" %>"><%= techShieldMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+
+                                <% if((moaMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (moaMods[key] < 0) ? "red" : "green" %>"><%= moaMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                            </tr>
+                        <%}%>
+                    <%}%>
+                   </tbody>
+                   </table>
+               </div>
+               
+            </div>
+        </script>
+        <script type="text/template" id="corruptedFactionDamageTemplate">
+            <% var corruptedMods = alts.corrupted.get('damageMultipliers');%>
+            <% var corruptedArmorMods = alts.corrupted.get('armorMultipliers');%>
+            <% var corruptedShieldMods = alts.corrupted.get('shieldMultipliers');%>
+            <% var gunnerMods = alts.gunner.get('damageMultipliers');%>
+            <% var gunnerArmorMods = alts.gunner.get('armorMultipliers');%>
+            <% var lancerMods = alts.lancer.get('damageMultipliers');%>
+            <% var lancerArmorMods = alts.lancer.get('armorMultipliers');%>
+            <% var crewmanMods = alts.crewman.get('damageMultipliers');%>
+            <% var crewmanShieldMods = alts.crewman.get('shieldMultipliers');%>
+            <% var ancientMods = alts.ancient.get('damageMultipliers');%>
+            <% var moaMods = alts.moa.get('damageMultipliers');%>
+            <% var moaShieldMods = alts.moa.get('shieldMultipliers');%>
+            <div class="factionWrapper">
+                <div class="factiondamage">
+                 <div class="noselect">
+                    <table class="scaling corruptedDamageType">
+                       <thead>
+                            <tr>
+                                <th class="corruptedDamageType">Type</th>
+                                <th class="right armor">Heavy Gunner (F)</th>
+                                <th class="right armor">Lancer (A)</th>
+                                <th class="right shield">Crewman</th>
+                                <th class="right">Ancient</th>
+                                <th class="right shield">Moa</th>
+                            </tr>
+                            </thead>
+                         <tbody>
+                            <%for(var key in alts['crewmanResult']){%>
+                                <tr>
+                                    <td><%= key %></td><td class="right"><%= alts['gunnerResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['lancerResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['crewmanResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['ancientResult'][key]['DPS'].toFixed(0)%></td><td class="right"><%= alts['moaResult'][key]['DPS'].toFixed(0)%></td>
+                                </tr>
+                            <%}%>
+                        </tbody>
+                    </table>
+                 </div>
+               </div>
+            
+                <div class="">
+                    <table class="enemies">
+                    <thead>
+                    <tr>
+                        <th class="">Void</th><th class="right armor">Avg. A</th><th class="right health">Avg. H</th><th class="right shield">Avg. S</th><th class="right armor">Ferrite</th><th class="right armor">Alloy</th><th class="right health">Cloned</th><th class="right health">Flesh</th><th class="right health">Fossilized</th><th class="right shield">Shield</th><th class="right health">Robotic</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <%for(var key in result['damageBreakdown']){%>
+                        <%if(key.indexOf("DoT") === -1){%>
+                            <tr>
+                                <td><%= key %></td>
+                                <% if((corruptedArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (corruptedArmorMods[key] < 0) ? "red" : "green" %>"><%= corruptedArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((corruptedMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (corruptedMods[key] < 0) ? "red" : "green" %>"><%= corruptedMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((corruptedShieldMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (corruptedShieldMods[key] < 0) ? "red" : "green" %>"><%= corruptedShieldMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((gunnerArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (gunnerArmorMods[key] < 0) ? "red" : "green" %>"><%= gunnerArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((lancerArmorMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (lancerArmorMods[key] < 0) ? "red" : "green" %>"><%= lancerArmorMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                <% if((lancerMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (lancerMods[key] < 0) ? "red" : "green" %>"><%= lancerMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((crewmanMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (crewmanMods[key] < 0) ? "red" : "green" %>"><%= crewmanMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((ancientMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (ancientMods[key] < 0) ? "red" : "green" %>"><%= ancientMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                <% if((crewmanShieldMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (crewmanShieldMods[key] < 0) ? "red" : "green" %>"><%= crewmanShieldMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                                
+                                
+
+                                <% if((moaMods[key] || 0) !== 0) {%>
+                                    <td class="right"><span class="<%= (moaMods[key] < 0) ? "red" : "green" %>"><%= moaMods[key].toFixed(2)%></span></td>
+                                <%} else {%><td class="right">-</td><%}%>
+                            </tr>
+                        <%}%>
+                    <%}%>
+                   </tbody>
+                   </table>
+               </div>
+               
             </div>
         </script>
         <script type="text/template" id="moduleTemplate">
@@ -385,6 +624,7 @@
             <div class="box weaponTypeHeader <%= weaponType.toLowerCase() %>" id="<%= weaponType.toLowerCase()%>">
                 <div class="weaponCategoryHeader">
                     <div class="cell" id="sortContainer"><%= weaponType.toUpperCase() %><% if(weaponType.toUpperCase() !== "LINKED"){%>S<%}%></div>
+                    <div class="cell" id="modControlContainer"></div>
                 </div>
             </div>
         </script>
@@ -400,6 +640,12 @@
                     state = "faded" 
                } %>
             <div class="sortType <%= local_name %> <%= (sort_asc) ? "asc" : "desc" %> noselect <%= state %>"><%= sortType.get('name')%></div>
+        </script>
+        <script type="text/template" id="modControlTemplate">
+            <div class="controlContainer">
+                <div class="control clear cell noselect">Clear Mods</div>
+                <div class="control default cell noselect">Default Mods</div>
+            </div>
         </script>
         <script type="text/template" id="searchTemplate">
             <div class="filter"><input type="text" class="filter" placeholder="Filter name.."></input></div>

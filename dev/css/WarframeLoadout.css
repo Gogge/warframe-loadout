@@ -37,6 +37,15 @@ div.share.rem{
 div.share:hover{
     background:#555555;
 }
+div.controlContainer{
+    margin-left: 20px;
+}
+div.control{
+    background:#454545;
+}
+div.control:hover{
+    background:#555555;
+}
 .popup.sharepopup{
     left:250px;
     top:3px;
@@ -186,6 +195,36 @@ span.name.fav{
 }
 table.enemies{
 }
+span.dotted{
+    border-bottom:1px dotted;
+}
+th.shield{
+    color:#6699ff;
+}
+th.armor{
+    color:#cccc00;
+}
+th.damageType{
+    width:80px;
+}
+th.grineerDamageType{
+    width:200px;
+}
+th.infestedDamageType{
+    width:150px;
+}
+table.scaling.infestedDamageType{
+    width:308px;
+}
+table.scaling.grineerDamageType{
+    margin-right: 0px;
+}
+th.corpusDamageType{
+    width:200px;
+}
+table.scaling.corpusDamageType{
+    width:275px;
+}
 span.green{
     color:greenyellow;
 }
@@ -196,8 +235,8 @@ table.stats{
     font-size: 11px;
     border:0px;
     padding:0px 0px 0px 0px;
-    margin-bottom:10px;
-    width:150px;
+    margin-bottom:0px;
+    width:160px;
 }
 table.damage{
     font-size: 11px;
@@ -224,7 +263,7 @@ table.scaling{
     padding:0px 0px 0px 0px;
     margin-bottom:5px;
     margin-right:5px;
-    width:260px;
+    width:305px;
 }
 span.scaling{
     font-size:11px;
@@ -469,4 +508,7 @@ span.damageDiff{
 .popup.enemies{
     left:0px;
     top:10px;
+}
+.factionWrapper{
+    display:inline;
 }

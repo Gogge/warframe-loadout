@@ -9,7 +9,7 @@ function   ($, _, Backbone, Enemies) {
             "click div.dec": "decrease",
             "click div.mid": "toggle",
             "mouseenter div.moduletext": "descriptionPopup",
-            "mouseleave div.moduletext": "descriptionPopup"
+            "mouseleave div.moduletext": "descriptionPopdown"
         },
 
         increase: function(e){
@@ -58,43 +58,54 @@ function   ($, _, Backbone, Enemies) {
             //modElement.children(".totalModDps").html("<br>" + (this.model.get('maxRanks')-1) + "/" + (this.model.get('maxRanks')-1) + " DPS: " + dps + "/" + apdps);
             modElement.children(".totalModDps").html("<br>" + (this.model.get('maxRanks')-1) + "/" + (this.model.get('maxRanks')-1) + " DPS: " + dps);
             
-            var ancientDisruptor = new Enemies.AncientDisruptor();
-            var grineerNapalm = new Enemies.GrineerNapalm();
-            var corpusTech = new Enemies.CorpusTech();
-            var corpusMoa = new Enemies.CorpusShockwaveMoa();
+            var infested = new Enemies.AverageInfested();
+            var grineer = new Enemies.AverageGrineer();
+            var corpus = new Enemies.AverageCorpus();
+            var corrupted = new Enemies.AverageCorrupted();
             var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
             
-            var ancientAltsZeroMod = ancientDisruptor.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
-            var napalmAltsZeroMod = grineerNapalm.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
-            var techAltsZeroMod = corpusTech.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
-            var moaAltsZeroMod = corpusMoa.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
             
-            var ancientAltsMaxMod = ancientDisruptor.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
-            var napalmAltsMaxMod = grineerNapalm.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
-            var techAltsMaxMod = corpusTech.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
-            var moaAltsMaxMod = corpusMoa.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            
+            var infestedAltsZeroMod = infested.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var grineerAltsZeroMod = grineer.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var corpusAltsZeroMod = corpus.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            var corruptedAltsZeroMod = corrupted.getDamageTaken(weaponResultZeroMod, 25, corrosiveProjection);
+            
+            var infestedAltsMaxMod = infested.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var grineerAltsMaxMod = grineer.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var corpusAltsMaxMod = corpus.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
+            var corruptedAltsMaxMod = corrupted.getDamageTaken(weaponResultMaxMod, 25, corrosiveProjection);
 
-            var zeroKeys = Object.keys(ancientAltsZeroMod);
-            var maxKeys = Object.keys(ancientAltsMaxMod);
+            var zeroKeys = Object.keys(infestedAltsZeroMod);
+            var maxKeys = Object.keys(infestedAltsMaxMod);
             
-            var table = '<table class="scaling"><thead><tr><th>Type</th><th class="right">Ancient</th><th class="right">Napalm</th><th class="right">Tech</th><th class="right">MOA</th></tr></thead><tbody>';
+            var table = '<table class="scaling"><thead><tr><th>Type</th><th class="right">Infested</th><th class="right">Grineer</th><th class="right">Corpus</th><th class="right">Void</th></tr></thead><tbody>';
             for(var i=0; i<maxKeys.length; i++){
                 var zeroIndex = 0;
                 if(zeroKeys.length === maxKeys.length){
                     zeroIndex = i;
                 }
-                var ancientDps = ancientAltsMaxMod[maxKeys[i]]['DPS'] - ancientAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
-                var napalmDps = napalmAltsMaxMod[maxKeys[i]]['DPS'] - napalmAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
-                var techDps = techAltsMaxMod[maxKeys[i]]['DPS'] - techAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
-                var moaDps = moaAltsMaxMod[maxKeys[i]]['DPS'] - moaAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                
+                var infestedDps = infestedAltsMaxMod[maxKeys[i]]['DPS'] - infestedAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var grineerDps = grineerAltsMaxMod[maxKeys[i]]['DPS'] - grineerAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var corpusDps = corpusAltsMaxMod[maxKeys[i]]['DPS'] - corpusAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var corruptedDps = corruptedAltsMaxMod[maxKeys[i]]['DPS'] - corruptedAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+
                 table += '<tr><td>';
-                table += maxKeys[i] + '</td><td class="right">' + ancientDps.toFixed(0)+ ' </td><td class="right">' + napalmDps.toFixed(0) + '</td><td class="right">' + techDps.toFixed(0) + '</td>' + '</td><td class="right">' + moaDps.toFixed(0) + '</td>';
+                table += maxKeys[i] + '</td><td class="right">' + ((infestedDps>0)?"+":"") + infestedDps.toFixed(0)+ ' </td><td class="right">' + ((grineerDps>0)?"+":"") + grineerDps.toFixed(0) + '</td><td class="right">' + ((corpusDps>0)?"+":"") + corpusDps.toFixed(0) + '</td><td class="right">' + ((corruptedDps>0)?"+":"") + corruptedDps.toFixed(0) + '</td>' + '</td>';
                 table += '</tr>';
             }
             table += '</tbody></table>';
+            modElement.children(".totalModDps").append("<br><br>DPS change against factions:");
             modElement.children(".totalModDps").append("<br>" + table);
             
-            this.$el.find(".popup").toggleClass("hidden");
+            //var factionDamageTemplate = _.template($("#factionDamageTemplate").html());
+            //modElement.children(".totalModDps").append(factionDamageTemplate({module:this.model}));
+            
+            this.$el.find(".popup").removeClass("hidden");
+        },
+        descriptionPopdown:function(e){
+            this.$el.find(".popup").addClass("hidden");
         },
         render:function(){
             var template = _.template($("#moduleTemplate").html());

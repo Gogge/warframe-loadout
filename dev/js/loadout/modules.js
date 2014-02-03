@@ -167,6 +167,18 @@ function   ($, _, Backbone) {
             baseCost:3
         }
     });
+    
+    MalignantForce = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Malignant Force", 
+            types:{'Toxic':15, 'Status Chance':15}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:3
+        }
+    });
 
    
     
@@ -537,6 +549,18 @@ function   ($, _, Backbone) {
         }
     });
     
+    PistolPestilence = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Pistol Pestilence", 
+            types:{'Toxic':15, 'Status Chance':15}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:3
+        }
+    });
+    
     Quickdraw = Module.extend({
        initialize:function(){
         },
@@ -570,6 +594,18 @@ function   ($, _, Backbone) {
             maxRanks:6,
             currentRank:6,
             baseCost:3
+        }
+    });
+    
+    Seeker = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Seeker", 
+            types:{'Puncture':40}, 
+            maxRanks:6, 
+            currentRank:6,
+            baseCost:9
         }
     });
     
@@ -642,7 +678,7 @@ function   ($, _, Backbone) {
         },
         defaults:{
             name:"Accelerated Blast", 
-            types:{'Piercing':15, 
+            types:{'Elemental Piercing':15, 
             'Fire Rate':15}, 
             maxRanks:4, 
             currentRank:4,
@@ -706,7 +742,7 @@ function   ($, _, Backbone) {
             types:{'Electrical':15}, 
             maxRanks:6, 
             currentRank:6,
-            baseCost:6
+            baseCost:5
         }
     });
     
@@ -742,7 +778,7 @@ function   ($, _, Backbone) {
             types:{'Toxic':15}, 
             maxRanks:6, 
             currentRank:6,
-            baseCost:3
+            baseCost:5
         }
     });
     
@@ -878,6 +914,18 @@ function   ($, _, Backbone) {
         }
     });
     
+    ToxicBarrage = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Toxic Barrage", 
+            types:{'Toxic':15, 'Status Chance':15}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:3
+        }
+    });
+    
     ViciousSpread = Module.extend({
        initialize:function(){
         },
@@ -913,6 +961,7 @@ function   ($, _, Backbone) {
                         new DeepFreeze({currentRank:0}), 
                         new Convulsion(),
                         new PathogenRounds(),
+                        new PistolPestilence({currentRank:0}),
                         new Expel(),
                         new IceStorm(),
                         new PistolGambit({currentRank:0}),
@@ -921,7 +970,8 @@ function   ($, _, Backbone) {
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
-                        new AmmoMutator({currentRank:0})
+                        new AmmoMutator({currentRank:0}),
+                        new Seeker({currentRank:0})
                     ]);
                break;
             case 'cestra':
@@ -940,6 +990,7 @@ function   ($, _, Backbone) {
                         new DeepFreeze({currentRank:0}), 
                         new Convulsion(),
                         new PathogenRounds(),
+                        new PistolPestilence({currentRank:0}),
                         new Expel(),
                         new IceStorm({currentRank:0}),
                         new PistolGambit({currentRank:0}),
@@ -948,7 +999,37 @@ function   ($, _, Backbone) {
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
-                        new AmmoMutator({currentRank:0})
+                        new AmmoMutator({currentRank:0}),
+                        new Seeker({currentRank:0})
+                    ]);
+               break;
+               case 'akmagnus':
+               mods = new ModuleCollection([
+                        new HornetStrike(), 
+                        new BarrelDiffusion(), 
+                        new LethalTorrent(), 
+                        new NoReturn({currentRank:0}), 
+                        new ConcussionRounds({currentRank:0}), 
+                        new RazorShot({currentRank:0}), 
+                        new Gunslinger({currentRank:0}), 
+                        new Quickdraw({currentRank:0}), 
+                        new SlipMagazine({currentRank:0}), 
+                        new StunningSpeed({currentRank:0}), 
+                        new HeatedCharge({currentRank:0}), 
+                        new DeepFreeze({currentRank:0}), 
+                        new Convulsion(),
+                        new PathogenRounds(),
+                        new PistolPestilence({currentRank:0}),
+                        new Expel({currentRank:0}),
+                        new IceStorm(),
+                        new PistolGambit(),
+                        new TargetCracker(),
+                        new SureShot({currentRank:0}),
+                        new HollowPoint({currentRank:0}),
+                        new MagnumForce({currentRank:0}),
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new Seeker({currentRank:0})
                     ]);
                break;
            default:
@@ -967,6 +1048,7 @@ function   ($, _, Backbone) {
                         new DeepFreeze({currentRank:0}), 
                         new Convulsion(),
                         new PathogenRounds(),
+                        new PistolPestilence({currentRank:0}),
                         new Expel(),
                         new IceStorm(),
                         new PistolGambit({currentRank:0}),
@@ -975,7 +1057,8 @@ function   ($, _, Backbone) {
                         new HollowPoint({currentRank:0}),
                         new MagnumForce({currentRank:0}),
                         new TaintedClip({currentRank:0}),
-                        new AmmoMutator({currentRank:0})
+                        new AmmoMutator({currentRank:0}),
+                        new Seeker({currentRank:0})
                     ]);
        }
        return mods;
@@ -1001,6 +1084,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(), 
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1029,6 +1113,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(), 
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1057,6 +1142,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(), 
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1085,6 +1171,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(),
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1113,6 +1200,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(),
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1141,6 +1229,7 @@ function   ($, _, Backbone) {
                         new CryoRounds({currentRank:0}), 
                         new Stormbringer({currentRank:0}),
                         new InfectedClip({currentRank:0}),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot(),
                         new Bane(),
@@ -1169,6 +1258,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(), 
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane(),
@@ -1204,6 +1294,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(),
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire(),
                         new HammerShot({currentRank:0}),
                         new Bane({currentRank:0}),
@@ -1234,6 +1325,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(),
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane({currentRank:0}),
@@ -1264,6 +1356,7 @@ function   ($, _, Backbone) {
                         new CryoRounds(), 
                         new Stormbringer(),
                         new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot({currentRank:0}),
                         new Bane({currentRank:0}),
@@ -1294,6 +1387,7 @@ function   ($, _, Backbone) {
                         new CryoRounds({currentRank:0}), 
                         new Stormbringer({currentRank:0}), 
                         new InfectedClip({currentRank:0}),
+                        new MalignantForce({currentRank:0}),
                         new Wildfire({currentRank:0}),
                         new HammerShot(),
                         new Bane(),
@@ -1312,45 +1406,20 @@ function   ($, _, Backbone) {
     getNewShotgunModCollection = function(buildType){
         var mods = {};
         switch(buildType){
-            case 'crit':
-                mods = new ModuleCollection([
-                        new PointBlank,
-                        new HellsChamber(),
-                        new AcceleratedBlast({currentRank:0}), 
-                        new Blaze(),
-                        new Flechette({currentRank:0}),
-                        new Disruptor({currentRank:0}),
-                        new Shredder({currentRank:0}),
-                        new ContagiousSpread({currentRank:0}),
-                        new IncendiaryCoat({currentRank:0}),
-                        new ChargedShell(), 
-                        new ChillingGrasp(),
-                        new Cleanse({currentRank:0}),
-                        new AmmoStock({currentRank:0}),
-                        new Blunderbuss(),
-                        new Ravage(),
-                        new ShotgunSpazz(),
-                        new TacticalPump({currentRank:0}),
-                        new ShotgunSavvy({currentRank:0}),
-                        new BurdenedShell({currentRank:0}),
-                        new TaintedShell({currentRank:0}),
-                        new ViciousSpread({currentRank:0}),
-                        new AmmoMutator({currentRank:0})
-                    ]);
-               break;
             case 'sobek':
                 mods = new ModuleCollection([
                         new PointBlank,
                         new HellsChamber(),
-                        new AcceleratedBlast({currentRank:0}), 
+                        new AcceleratedBlast(), 
                         new Blaze(),
                         new Flechette({currentRank:0}),
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
+                        new ToxicBarrage({currentRank:0}),
                         new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
-                        new ChillingGrasp(),
+                        new ChillingGrasp({currentRank:0}),
                         new Cleanse(),
                         new AmmoStock({currentRank:0}),
                         new Blunderbuss({currentRank:0}),
@@ -1368,15 +1437,16 @@ function   ($, _, Backbone) {
                 mods = new ModuleCollection([
                         new PointBlank,
                         new HellsChamber(),
-                        new AcceleratedBlast({currentRank:0}), 
+                        new AcceleratedBlast(), 
                         new Blaze(),
                         new Flechette({currentRank:0}),
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
+                        new ToxicBarrage({currentRank:0}),
                         new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
-                        new ChillingGrasp(),
+                        new ChillingGrasp({currentRank:0}),
                         new Cleanse(),
                         new AmmoStock(),
                         new Blunderbuss({currentRank:0}),
@@ -1394,13 +1464,14 @@ function   ($, _, Backbone) {
                 mods = new ModuleCollection([
                         new PointBlank,
                         new HellsChamber(),
-                        new AcceleratedBlast({currentRank:0}), 
+                        new AcceleratedBlast(), 
                         new Blaze(),
                         new Flechette({currentRank:0}),
                         new Disruptor({currentRank:0}),
                         new Shredder({currentRank:0}),
                         new ContagiousSpread(),
-                        new IncendiaryCoat(),
+                        new ToxicBarrage({currentRank:0}),
+                        new IncendiaryCoat({currentRank:0}),
                         new ChargedShell(), 
                         new ChillingGrasp(),
                         new Cleanse(),

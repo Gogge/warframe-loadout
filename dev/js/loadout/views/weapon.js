@@ -1,5 +1,5 @@
-define(['jquery', 'underscore', 'backbone', 'loadout/weapons', 'loadout/enemies', 'loadout/auras', 'loadout/views/weaponModule', 'loadout/views/weaponSort', 'loadout/views/search'],
-function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSortView, SearchView) {
+define(['jquery', 'underscore', 'backbone', 'loadout/weapons', 'loadout/enemies', 'loadout/auras', 'loadout/views/weaponModule', 'loadout/views/weaponSort', 'loadout/views/search', 'loadout/views/modControl'],
+function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSortView, SearchView, ModControlView) {
     
     WeaponView = Backbone.View.extend({
         tagName:"div",
@@ -18,14 +18,14 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             "mouseleave table.damage": "descriptionPopup",
             "mouseenter table.stats": "statsPopup",
             "mouseleave table.stats": "statsPopup",
-            "mouseenter th.ancient": "ancientPopup",
-            "mouseleave th.ancient": "ancientPopup",
-            "mouseenter th.napalm": "napalmPopup",
-            "mouseleave th.napalm": "napalmPopup",
-            "mouseenter th.tech": "techPopup",
-            "mouseleave th.tech": "techPopup",
-            "mouseenter th.moa": "moaPopup",
-            "mouseleave th.moa": "moaPopup"
+            "mouseenter .infested": "infestedPopup",
+            "mouseleave .infested": "infestedPopdown",
+            "mouseenter .grineer": "grineerPopup",
+            "mouseleave .grineer": "grineerPopdown",
+            "mouseenter .corpus": "corpusPopup",
+            "mouseleave .corpus": "corpusPopdown",
+            "mouseenter .corrupted": "corruptedPopup",
+            "mouseleave .corrupted": "corruptedPopdown"
             //"click span.name": "toggleMinimized"
         },
         descriptionPopup:function(e){
@@ -34,17 +34,114 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
         statsPopup:function(e){
             this.$el.find(".popup.stats").toggleClass("hidden");
         },
-        ancientPopup:function(e){
-            this.$el.find(".popup.ancient").toggleClass("hidden");
+        infestedPopup:function(e){
+            var weapon = this.model;
+            var result = weapon.get('result');
+            var disrupter = new Enemies.AncientDisrupter();
+            var healer = new Enemies.AncientHealer();
+            var charger = new Enemies.InfestedCharger();
+            var runner = new Enemies.InfestedRunner();
+            var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            
+            var alts = {};
+            alts.disrupterResult = disrupter.getDamageTaken(result, 25, corrosiveProjection);
+            alts.healerResult = healer.getDamageTaken(result, 25, corrosiveProjection);
+            alts.chargerResult = charger.getDamageTaken(result, 25, corrosiveProjection);
+            alts.runnerResult = runner.getDamageTaken(result, 25, corrosiveProjection);
+            alts.disrupter = disrupter;
+            alts.healer = healer;
+            alts.charger = charger;
+            alts.runner = runner;
+            alts.infested = result.infested;
+            
+            var elem = this.$el.find(".popup.infested");
+            var factionDamageTemplate = _.template($("#infestedFactionDamageTemplate").html());
+            elem.html(factionDamageTemplate({alts:alts, result:result}));
+            this.$el.find(".popup.infested").removeClass("hidden");
         },
-        napalmPopup:function(e){
-            this.$el.find(".popup.napalm").toggleClass("hidden");
+        infestedPopdown:function(e){
+            this.$el.find(".popup").addClass("hidden");
         },
-        techPopup:function(e){
-            this.$el.find(".popup.tech").toggleClass("hidden");
+        grineerPopup:function(e){
+            var weapon = this.model;
+            var result = weapon.get('result');
+            var napalm = new Enemies.GrineerNapalm();
+            var gunner = new Enemies.GrineerHeavyGunner();
+            var lancer = new Enemies.GrineerLancer();
+            var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            
+            var alts = {};
+            alts.napalmResult = napalm.getDamageTaken(result, 25, corrosiveProjection);
+            alts.gunnerResult = gunner.getDamageTaken(result, 25, corrosiveProjection);
+            alts.lancerResult = lancer.getDamageTaken(result, 25, corrosiveProjection);
+            alts.napalm = napalm;
+            alts.gunner = gunner;
+            alts.lancer = lancer;
+            alts.grineer = result.grineer;
+            
+            var elem = this.$el.find(".popup.grineer");
+            var factionDamageTemplate = _.template($("#grineerFactionDamageTemplate").html());
+            elem.html(factionDamageTemplate({alts:alts, result:result}));
+            this.$el.find(".popup.grineer").removeClass("hidden");
         },
-        moaPopup:function(e){
-            this.$el.find(".popup.moa").toggleClass("hidden");
+        grineerPopdown:function(e){
+            this.$el.find(".popup").addClass("hidden");
+        },
+        corpusPopup:function(e){
+            var weapon = this.model;
+            var result = weapon.get('result');
+            var tech = new Enemies.CorpusTech();
+            var crewman = new Enemies.CorpusCrewman();
+            var moa = new Enemies.CorpusShockwaveMoa();
+            var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            
+            var alts = {};
+            alts.techResult = tech.getDamageTaken(result, 25, corrosiveProjection);
+            alts.crewmanResult = crewman.getDamageTaken(result, 25, corrosiveProjection);
+            alts.moaResult = moa.getDamageTaken(result, 25, corrosiveProjection);
+            alts.tech = tech;
+            alts.crewman = crewman;
+            alts.moa = moa;
+            alts.corpus = result.corpus;
+            
+            var elem = this.$el.find(".popup.corpus");
+            var factionDamageTemplate = _.template($("#corpusFactionDamageTemplate").html());
+            elem.html(factionDamageTemplate({alts:alts, result:result}));
+            this.$el.find(".popup.corpus").removeClass("hidden");
+        },
+        corpusPopdown:function(e){
+            this.$el.find(".popup").addClass("hidden");
+        },
+        corruptedPopup:function(e){
+            var weapon = this.model;
+            var result = weapon.get('result');
+            var crewman = new Enemies.CorruptedCrewman();
+            var lancer = new Enemies.CorruptedLancer();
+            var gunner = new Enemies.CorruptedHeavyGunner();
+            var ancient = new Enemies.CorruptedAncient();
+            var moa = new Enemies.CorruptedMoa();
+            var corrosiveProjection = weapon.get('auras').where({name:"Corrosive Projection"})[0].getPercents()["Armor Reduction"];
+            
+            var alts = {};
+            alts.crewmanResult = crewman.getDamageTaken(result, 25, corrosiveProjection);
+            alts.lancerResult = lancer.getDamageTaken(result, 25, corrosiveProjection);
+            alts.gunnerResult = gunner.getDamageTaken(result, 25, corrosiveProjection);
+            alts.ancientResult = ancient.getDamageTaken(result, 25, corrosiveProjection);
+            alts.moaResult = moa.getDamageTaken(result, 25, corrosiveProjection);
+            alts.crewman = crewman;
+            alts.lancer = lancer;
+            alts.gunner = gunner;
+            alts.ancient = ancient;
+            alts.moa = moa;
+            alts.corrupted = result.corrupted;
+            
+            var elem = this.$el.find(".popup.corrupted");
+            var factionDamageTemplate = _.template($("#corruptedFactionDamageTemplate").html());
+            elem.html(factionDamageTemplate({alts:alts, result:result}));
+            this.$el.find(".popup.corrupted").removeClass("hidden");
+        },
+        corruptedPopdown:function(e){
+            this.$el.find(".popup").addClass("hidden");
         },
         toggleMinimized:function(){
             this.$el.toggleClass("minimized");
@@ -187,7 +284,6 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             var weaponView = new WeaponView({model:model, favoriteCollection:this.options.favoriteCollection, shareCollection:this.options.shareCollection, categoryName:this.options.categoryName});
             //_.extend(weaponView, Backbone.Events);
             weaponView.render();
-            
             $(this.el).children(".weaponTypeHeader").append(weaponView.el);
             if(this.options.categoryName === "Favorite"){
                 var weapon = model;
@@ -199,6 +295,10 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
                     weapon.set('firstRender', false);
                 }
             }
+            weaponView.listenTo(this.collection, 'quickRender', weaponView.render);
+        },
+        quickRender:function(){
+            this.collection.trigger('quickRender');
         },
         render:function(){
             // When we re-render the elements the old dynamic classes disappear, 
@@ -215,16 +315,33 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
                 new WeaponSortView.SortType({name:"Burst", option:"burst"}),
                 //new WeaponSortView.SortType({name:"AP DPS", option:"apdps"}),
                 new WeaponSortView.SortType({name:"Shot", option:"shot"}),
-                new WeaponSortView.SortType({name:"Ancient", option:"ancientDps"}),
-                new WeaponSortView.SortType({name:"Napalm", option:"napalmDps"}),
-                new WeaponSortView.SortType({name:"Tech", option:"techDps"}),
-                new WeaponSortView.SortType({name:"MOA", option:"moaDps"}),
+                new WeaponSortView.SortType({name:"Procs", option:"procs"}),
+                new WeaponSortView.SortType({name:"Infested", option:"infestedDps"}),
+                new WeaponSortView.SortType({name:"Grineer", option:"grineerDps"}),
+                new WeaponSortView.SortType({name:"Corpus", option:"corpusDps"}),
+                new WeaponSortView.SortType({name:"Void", option:"corruptedDps"})
             ]);
             var sortListView = new WeaponSortView.SortListView({collection:sortList, weaponCategory:this.collection, weaponCategoryView:this});
             sortListView.render();
             $(this.el).find("#sortContainer").append(sortListView.el);
             
-            this.collection.each(this.renderWeapon);
+            // Module Control
+            var modControlView = new ModControlView.ModControlView({weaponCategory:this.collection, weaponCategoryView:this});
+            modControlView.render();
+            $(this.el).find("#modControlContainer").append(modControlView.el);
+
+            
+            // For some reason the favorites list CSS bugs when binding and/or using setTimeout, so we skip it
+            if(this.options.categoryName === "Favorite"){
+                this.collection.each(this.renderWeapon);
+            } else {
+                // We use a setTimeout to allow input/interrupts to happen between weapon calculations, avoids the browser freezing
+                for(var i = 0;i<this.collection.models.length;i++){
+                    var temp = _.bind(this.renderWeapon, this, this.collection.models[i]);
+                    setTimeout(temp, i);
+                }
+            }
+
             if((this.options.categoryName === "Favorite")){
                 if (this.collection.length === 0) {
                     $.cookie('favorites', "");
@@ -252,10 +369,10 @@ function   ($, _, Backbone, Weapons, Enemies, Auras, WeaponModuleView, WeaponSor
             weaponCategory.render();
             if(categoryName === "Favorite"){
                 weaponCategory.listenTo(favoriteCollection, 'add remove', weaponCategory.render);
-                
-            }
-            if(categoryName === "Linked"){
+            } else if(categoryName === "Linked"){
                 weaponCategory.listenTo(shareCollection, 'add remove', weaponCategory.render);
+            } else {
+                weaponCategory.listenToOnce(collection, 'weaponLoad', weaponCategory.render);
             }
             $(this.el).append(weaponCategory.el);
             if(categoryName === "Favorite"){
