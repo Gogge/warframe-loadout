@@ -9,7 +9,7 @@
     </head>
     <body>
         <div class="links"><div class="cell link"><a href="http://www.warframe.com">Warframe.com</a></div><div class="cell link"><a href="http://www.reddit.com/r/warframe">reddit r/Warframe</a></div><div class="cell link"><a href="http://www.reddit.com/r/Warframe/comments/1sdx2e/dpsframe_is_now_updated_for_damage_20/">(new) discussion thread on reddit</a></div></div>
-        <div class="notes">Updated for Damage 2.0! (Update 11.9.2) dpsframe 11.9.2 rev. 5 <a href="https://forums.warframe.com/index.php?/topic/118754-a-web-based-dps-tool/#entry1993805">changelog</a><br></div>
+        <div class="notes">Updated for Damage 2.0! (Update 12.0.1) dpsframe 12.0.1 rev. 1 <a href="https://forums.warframe.com/index.php?/topic/118754-a-web-based-dps-tool/#entry1993805">changelog</a><br></div>
         <div id="optionsContainer" class="box"></div>
         <div id="weaponContainer" class="weapon">Loading..</div>
         <script type="text/template" id="weaponTemplate">
@@ -124,6 +124,12 @@
                             var proc_chances =((weapon.get('Projectiles') || 1.0) * (1 + result['Multishot'] / 100));
                             stat_name += " (" + proc_chances.toFixed(1) + "x)";
                             stat_value = (stat_value *= 100).toFixed(2) + "%";
+                          } else if(stat_name === "Ammo Lasts"){
+                            if (stat_value === Infinity) { 
+                                stat_value = "Inf. sec";
+                            } else {
+                                stat_value = stat_value.toFixed(1) + " sec";
+                            }
                           } else {
                             stat_value = stat_value.toFixed(2);
                           }%>
@@ -180,6 +186,13 @@
                                         stat_value = 1;
                                     }
                                     stat_value = stat_value.toFixed(2);
+                                  } else if(stat_name === "Ammo Lasts"){
+                                    stat_value = ((weapon.get('Ammo Capacity') + weapon.get('Magazine Capacity')) / weapon.get('Fire Rate')) + ((weapon.get('Ammo Capacity') + weapon.get('Magazine Capacity')) / weapon.get('Magazine Capacity')) * (weapon.get('Reload Speed') || 0.0001);
+                                    if (stat_value === Infinity) { 
+                                        stat_value = "Inf. sec";
+                                    } else {
+                                        stat_value = stat_value.toFixed(1) + " sec";
+                                    }
                                   } else {
                                     stat_value = stat_value.toFixed(2);
                                   }%>

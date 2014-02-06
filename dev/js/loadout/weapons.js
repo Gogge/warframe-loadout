@@ -7,8 +7,31 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
 
     Weapon = Backbone.Model.extend({
        initialize:function(){
+        // Set modules if not set in the weapon's own constructor
         if(!this.get('modules')){this.set('modules', Modules.getNewPistolModCollection());};
+        // Set mauras if not set in the weapon's own constructor
         if(!this.get('auras')){this.set('auras', Auras.getNewAuraCollection());};
+        // Set default ammo capacity based on weapon type
+        switch(this.get('weaponType')){
+            case "pistol": 
+                this.set('Ammo Capacity', 210);
+                break;
+            case "rifle": 
+                this.set('Ammo Capacity', 540);
+                break;
+            case "shotgun": 
+                this.set('Ammo Capacity', 120);
+                break;
+            case "sniper": 
+                this.set('Ammo Capacity', 72);
+                break;
+            case "bow": 
+                this.set('Ammo Capacity', 71);
+                break;
+            case "sentinel": 
+                this.set('Ammo Capacity', Infinity);
+                break;
+        }
         this.updateModuleDps();
        },
        defaults: {
@@ -39,6 +62,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             //var damageType = this.get('damageType');
             var weaponType = this.get('weaponType');
             var projectiles = this.get('Projectiles') || 1;
+            var ammoCapacity = this.get('Ammo Capacity');
             var result = {};
             result['damageBreakdown'] = {};
             result['damageBreakdown']['Piercing'] = 0;
@@ -283,6 +307,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['stats']['Avg. Procs/Shot'] = statusChance * projectiles;
             result['stats']['Projectiles'] = projectiles;
             result['stats']['Time Firing'] = (magazineCapacity / fireRate)/((magazineCapacity / fireRate) + reloadSpeed);
+            result['stats']['Ammo Lasts'] = ((ammoCapacity + magazineCapacity) / fireRate) + ((ammoCapacity + magazineCapacity) / magazineCapacity) * (reloadSpeed || 0.00001);
             
             //result['ancientDps'] = infestedAncient.getDamageTaken(result, 25, corrosiveProjection);
             //result['napalmDps'] = grineerNapalm.getDamageTaken(result, 25, corrosiveProjection);
@@ -623,6 +648,28 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
         
+        new (Akvasto = Weapon.extend({
+           initialize:function(){
+             //console.log("Dual Vastos init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Akvasto",
+            masteryRank:0,
+            'Impact':12.5,
+            'Piercing':12.5,
+            'Slashing':25,
+            'Status Chance':5,
+            'Fire Rate' : 10, 
+            'Magazine Capacity' : 12, 
+            'Reload Speed' : 1.75, 
+            'Crit Chance' : 0.15, 
+            'Crit Damage' : 1.5  
+           }
+        })),
+        
         new (Ballistica = Weapon.extend({
            initialize:function(){
              this.set('modules', Modules.getNewPistolModCollection());
@@ -722,7 +769,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':84,
             'Piercing':10.5,
             'Slashing':10.5,
-            'Status Chance':2,
+            'Status Chance':14,
             'Fire Rate' : 5.0, 
             'Magazine Capacity' : 2, 
             'Reload Speed' : 1.05, 
@@ -745,7 +792,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':112,
             'Piercing':14,
             'Slashing':14,
-            'Status Chance':2.5,
+            'Status Chance':17.5,
             'Fire Rate' : 4.2, 
             'Magazine Capacity' : 4, 
             'Reload Speed' : 2.0, 
@@ -844,28 +891,6 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
 
-        new (Akvasto = Weapon.extend({
-           initialize:function(){
-             //console.log("Dual Vastos init!");
-             this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
-           },
-           defaults:{
-            weaponType:"pistol", 
-            name : "Akvasto",
-            masteryRank:0,
-            'Impact':12.5,
-            'Piercing':12.5,
-            'Slashing':25,
-            'Status Chance':5,
-            'Fire Rate' : 10, 
-            'Magazine Capacity' : 12, 
-            'Reload Speed' : 1.75, 
-            'Crit Chance' : 0.15, 
-            'Crit Damage' : 1.5  
-           }
-        })),
-
         new (Embolist = Weapon.extend({
            initialize:function(){
              //console.log("Embolist init!");
@@ -877,14 +902,31 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"pistol", 
             name : "Embolist",
             masteryRank:8,
-            'Toxic':15,
+            'Toxic':18.5,
             'Status Chance':10,
             'Fire Rate' : 10,
             'Magazine Capacity' : 100, 
             'Reload Speed' : 1.5, 
             'Crit Chance' : 0.025, 
             'Crit Damage' : 2.0  
-           }
+           },
+           specialDamageCalculations:function(damageBreakdown, module_types){
+                var statCritChance = Math.min(this.get('Crit Chance') * (100 + module_types['Crit Chance']) / 100, 1.0);
+                var statCritDamage = this.get('Crit Damage') * (100 + module_types['Crit Damage']) / 100;
+
+                var baseDamage = this.get('Toxic') * (100 + module_types['Damage']) / 100;
+                baseDamage = baseDamage * (100 + module_types['Faction Damage']) / 100;
+                baseDamage += baseDamage * statCritChance * (statCritDamage - 1.0);
+                
+                var damage = {};
+                damage['DoT'] = {};
+                damage['DoT']['damageBreakdown'] = {};
+                // 50% base damage per tick for 9 ticks
+                damage['DoT']['damageBreakdown']['Toxic'] =  baseDamage * 0.5 * 9;
+                damage['DoT']['ticks'] = 9;
+                damage['DoT']['ticksPerSecond'] = 1;
+                return damage;
+            }
         })),
 
         new (Furis = Weapon.extend({
@@ -1214,6 +1256,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              //console.log("Spectra init!");
              this.set('modules', Modules.getNewPistolModCollection());
              this.constructor.__super__.initialize.apply(this);
+             this.set('Ammo Capacity', 63);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1222,7 +1265,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Corrosive':450,
             'Status Chance':2,
             'Fire Rate' : 0.33,
-            'Magazine Capacity' : 2,
+            'Magazine Capacity' : 3.33,
             'Reload Speed' : 2.0, 
             'Crit Chance' : 0.0, 
             'Crit Damage' : 2.0  
@@ -1535,10 +1578,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              weaponType:"rifle", 
              name : "Flux Rifle",
              masteryRank:6,
-             'Impact':1.5,
-             'Piercing':1.5,
-             'Slashing':12,
-             'Status Chance':9,
+             'Impact':1.75,
+             'Piercing':1.75,
+             'Slashing':14,
+             'Status Chance':25,
              'Fire Rate' : 10, 
              'Magazine Capacity' : 100, 
              'Reload Speed' : 2.0, 
@@ -1662,9 +1705,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              weaponType:"rifle", 
              name : "Latron",
              masteryRank:0,
-             'Impact':6,
-             'Piercing':28,
-             'Slashing':6,
+             'Impact':8.25,
+             'Piercing':38.5,
+             'Slashing':8.25,
              'Status Chance':10, 
              'Fire Rate' : 4.2, 
              'Magazine Capacity' : 15, 
@@ -1684,10 +1727,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              weaponType:"rifle", 
              name : "Latron Prime",
              masteryRank:0,
-             'Impact':4.5,
-             'Piercing':36,
-             'Slashing':4.5,
-             'Status Chance':15,
+             'Impact':8.5,
+             'Piercing':68,
+             'Slashing':8.5,
+             'Status Chance':25,
              'Fire Rate' : 4.17, 
              'Magazine Capacity' : 15, 
              'Reload Speed' : 2.4, 
@@ -1919,7 +1962,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':52.8,
             'Piercing':14.4,
             'Slashing':28.8,
-            'Status Chance':2.5,
+            'Status Chance':20,
             'Fire Rate' : 5,
             'Magazine Capacity' : 10,
             'Reload Speed' : 2.3,
@@ -1941,7 +1984,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':76,
             'Piercing':17.6,
             'Slashing':23.4,
-            'Status Chance':5, 
+            'Status Chance':40, 
             'Fire Rate' : 5.8,
             'Magazine Capacity' : 15,
             'Reload Speed' : 2.3,
@@ -2004,13 +2047,33 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             name : "Hek",
             Projectiles:7,
             masteryRank:4,
-            'Impact':21,
-            'Piercing':91,
-            'Slashing':28,
-            'Status Chance':15,
+            'Impact':26.25,
+            'Piercing':113.75,
+            'Slashing':35,
+            'Status Chance':25,
             'Fire Rate' : 2.2,
             'Magazine Capacity' : 4,
             'Reload Speed' : 2.2,
+            'Crit Chance' : 0.1,
+            'Crit Damage' : 2.0
+           }
+        })),
+        
+        new (Phage = Weapon.extend({
+           initialize:function(){
+             this.set('modules', Modules.getNewShotgunModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"shotgun", 
+            name : "Phage",
+            Projectiles:7,
+            masteryRank:0,
+            'Viral':33,
+            'Status Chance':15,
+            'Fire Rate' : 10,
+            'Magazine Capacity' : 40,
+            'Reload Speed' : 2,
             'Crit Chance' : 0.1,
             'Crit Damage' : 2.0
            }
@@ -2051,7 +2114,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':66,
             'Piercing':18,
             'Slashing':36,
-            'Status Chance':2.5,
+            'Status Chance':20,
             'Fire Rate' : 1.7,
             'Magazine Capacity' : 6,
             'Reload Speed' : 3.0,
@@ -2073,7 +2136,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':97.5,
             'Piercing':22.5,
             'Slashing':30,
-            'Status Chance':5, 
+            'Status Chance':40, 
             'Fire Rate' : 2.5,
             'Magazine Capacity' : 8,
             'Reload Speed' : 1.5,
@@ -2092,15 +2155,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             name : "Tigris",
             masteryRank:0,
             Projectiles:4,
-            'Impact':18,
-            'Piercing':18,
-            'Slashing':144,
-            'Status Chance':15,
-            'Fire Rate' : 2.3,
-            'Magazine Capacity' : 2,
-            'Reload Speed' : 1.8,
-            'Crit Chance' : 0.025,
-            'Crit Damage' : 1.5
+            'Impact':20,
+            'Piercing':20,
+            'Slashing':160,
+            'Status Chance':25,
+            'Fire Rate': 2,
+            'Magazine Capacity': 2,
+            'Reload Speed': 1.8,
+            'Crit Chance': 0.05,
+            'Crit Damage': 2.0
            }
         })),
 
@@ -2119,7 +2182,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             masteryRank:7,
             'Electrical':250,
             'Status Chance':25,
-            'Fire Rate' : 0.4615,
+            'Fire Rate' : 0.667,
             'Magazine Capacity' : 10,
             'Reload Speed' : 2.0,
             'Crit Chance' : 0.20,
@@ -2200,10 +2263,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"sniper", 
             name : "Vulkar",
             masteryRank:1,
-            'Impact':100,
-            'Piercing':18.8,
-            'Slashing':6.2,
-            'Status Chance':10, 
+            'Impact':116,
+            'Piercing':21.75,
+            'Slashing':7.25,
+            'Status Chance':25, 
             'Fire Rate' : 1.5,
             'Magazine Capacity' : 4,
             'Reload Speed' : 4.0,
@@ -2226,11 +2289,11 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Cernos",
             masteryRank:0,
-            'Impact':30,
-            'Piercing':2,
-            'Slashing':8,
+            'Impact':60,
+            'Piercing':4,
+            'Slashing':16,
             'Status Chance':15,
-            'Fire Rate' : 1.0,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 1,
             'Reload Speed' : 0.8,
             'Crit Chance' : 0.20,
@@ -2248,15 +2311,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Cernos (charge)",
             masteryRank:0,
-            'Impact':75,
-            'Piercing':5,
-            'Slashing':20,
+            'Impact':162,
+            'Piercing':9,
+            'Slashing':9,
             'Status Chance':15,
-            'Fire Rate' : 0.5,
+            'Fire Rate' : 1.0,
             'Magazine Capacity' : 1,
             'Reload Speed' : 0.8,
-            'Crit Chance' : 0.20,
-            'Crit Damage' : 1.5
+            'Crit Chance' : 0.35,
+            'Crit Damage' : 2
            }
         })),
         
@@ -2270,14 +2333,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Dread",
             masteryRank:0,
-            'Impact':6,
-            'Piercing':6,
-            'Slashing':48,
+            'Impact':11,
+            'Piercing':11,
+            'Slashing':88,
             'Status Chance':15,
-            'Fire Rate' : 1.0,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 1,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.20,
+            'Reload Speed' : 0.75,
+            'Crit Chance' : 0.25,
             'Crit Damage' : 2.0
            }
         })),
@@ -2292,14 +2355,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Dread (charge)",
             masteryRank:0,
-            'Impact':15,
-            'Piercing':15,
-            'Slashing':120,
-            'Status Chance':15, 
-            'Fire Rate' : 0.5,
+            'Impact':10,
+            'Piercing':10,
+            'Slashing':180,
+            'Status Chance':20, 
+            'Fire Rate' : 1.0,
             'Magazine Capacity' : 1,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.20,
+            'Reload Speed' : 0.75,
+            'Crit Chance' : 0.50,
             'Crit Damage' : 2.0
            }
         })),
@@ -2336,11 +2399,11 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Miter (charge)",
             masteryRank:4,
-            'Impact':30,
-            'Piercing':15,
-            'Slashing':105,
-            'Status Chance':10, 
-            'Fire Rate' : 0.41666,
+            'Impact':12.5,
+            'Piercing':12.5,
+            'Slashing':225,
+            'Status Chance':25, 
+            'Fire Rate' : 0.5,
             'Magazine Capacity' : 20,
             'Reload Speed' : 2.0,
             'Crit Chance' : 0.0,
@@ -2358,14 +2421,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Paris",
             masteryRank:0,
-            'Impact':2.3,
-            'Piercing':33.8,
-            'Slashing':9.0,
+            'Impact':3.75,
+            'Piercing':56.25,
+            'Slashing':15,
             'Status Chance':10, 
-            'Fire Rate' : 1.0,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 1,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.10,
+            'Reload Speed' : 0.8,
+            'Crit Chance' : 0.20,
             'Crit Damage' : 1.5
            }
         })),
@@ -2380,15 +2443,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Paris (charge)",
             masteryRank:0,
-            'Impact':5,
-            'Piercing':75,
-            'Slashing':20,
+            'Impact':7.5,
+            'Piercing':120,
+            'Slashing':22.5,
             'Status Chance':10,
-            'Fire Rate' : 0.5,
+            'Fire Rate' : 1.0,
             'Magazine Capacity' : 1,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.20,
-            'Crit Damage' : 1.5
+            'Reload Speed' : 0.8,
+            'Crit Chance' : 0.30,
+            'Crit Damage' : 2.0
            }
         })),
 
@@ -2402,14 +2465,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Paris Prime",
             masteryRank:4,
-            'Impact':3.3,
-            'Piercing':55.3,
-            'Slashing':6.5,
+            'Impact':4.75,
+            'Piercing':80.75,
+            'Slashing':9.5,
             'Status Chance':15, 
-            'Fire Rate' : 1.0,
+            'Fire Rate' : 10,
             'Magazine Capacity' : 1,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.20,
+            'Reload Speed' : 0.7,
+            'Crit Chance' : 0.25,
             'Crit Damage' : 1.5
            }
         })),
@@ -2424,15 +2487,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             weaponType:"bow", 
             name : "Paris Prime (charge)",
             masteryRank:4,
-            'Impact':7.5,
-            'Piercing':127.5,
-            'Slashing':15,
-            'Status Chance':15, 
-            'Fire Rate' : 0.5,
+            'Impact':5,
+            'Piercing':160,
+            'Slashing':35,
+            'Status Chance':20, 
+            'Fire Rate' : 1.0,
             'Magazine Capacity' : 1.0,
-            'Reload Speed' : 1.0,
-            'Crit Chance' : 0.20,
-            'Crit Damage' : 1.5
+            'Reload Speed' : 0.7,
+            'Crit Chance' : 0.45,
+            'Crit Damage' : 2.0
            }
         })),
         
@@ -2471,14 +2534,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             name : "Deth Machine Rifle",
             masteryRank:0,
             'Impact':0.5,
-            'Piercing':0.3,
-            'Slashing':4.2,
+            'Piercing':0.25,
+            'Slashing':4.25,
             'Status Chance':1, 
-            'Fire Rate' : 8.3,
+            'Fire Rate' : 8.33,
             'Magazine Capacity' : 100,
             'Reload Speed' : 2.0,
-            'Crit Chance' : 0,
-            'Crit Damage' : 1.5
+            'Crit Chance' : 0.05,
+            'Crit Damage' : 2.0
            }
         })),
         
