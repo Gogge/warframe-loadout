@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout 12.0.1 revision 1
+ * Warframe Loadout 12.0.1 revision 2
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license

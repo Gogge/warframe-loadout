@@ -648,6 +648,28 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
         
+        new (Akstiletto = Weapon.extend({
+           initialize:function(){
+             //console.log("Dual Vastos init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Akstiletto",
+            masteryRank:0,
+            'Impact':10.8,
+            'Piercing':1.8,
+            'Slashing':5.4,
+            'Status Chance':15,
+            'Fire Rate' : 10, 
+            'Magazine Capacity' : 28, 
+            'Reload Speed' : 1.1, 
+            'Crit Chance' : 0.15, 
+            'Crit Damage' : 1.5  
+           }
+        })),
+        
         new (Akvasto = Weapon.extend({
            initialize:function(){
              //console.log("Dual Vastos init!");
@@ -888,6 +910,28 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Reload Speed' : 2.2, 
             'Crit Chance' : 0.025, 
             'Crit Damage' : 2.0  
+           }
+        })),
+        
+        new (DualCestra = Weapon.extend({
+           initialize:function(){
+             //console.log("Dual Broncos init!");
+             this.set('modules', Modules.getNewPistolModCollection());
+             this.constructor.__super__.initialize.apply(this);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Dual Cestra",
+            masteryRank:0,
+            Projectiles:0,
+            'Impact':5,
+            'Piercing':20,
+            'Status Chance':5.0, 
+            'Fire Rate' : 12.5, 
+            'Magazine Capacity' : 100, 
+            'Reload Speed' : 3.5, 
+            'Crit Chance' : 0.025, 
+            'Crit Damage' : 1.5  
            }
         })),
 
