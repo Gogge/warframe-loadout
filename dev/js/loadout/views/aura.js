@@ -117,7 +117,7 @@ function   ($, _, Backbone, Modules, Auras, Enemies) {
                 var infestedDps = infestedAltsMaxMod[maxKeys[i]]['DPS'] - infestedAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
                 var grineerDps = grineerAltsMaxMod[maxKeys[i]]['DPS'] - grineerAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
                 var corpusDps = corpusAltsMaxMod[maxKeys[i]]['DPS'] - corpusAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
-                var corruptedDps = corpusAltsMaxMod[maxKeys[i]]['DPS'] - corruptedAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
+                var corruptedDps = corruptedAltsMaxMod[maxKeys[i]]['DPS'] - corruptedAltsZeroMod[zeroKeys[zeroIndex]]['DPS'];
                 
                 table += '<tr><td>';
                 table += maxKeys[i] + '</td><td class="right">' + infestedDps.toFixed(0)+ ' </td><td class="right">' + grineerDps.toFixed(0) + '</td><td class="right">' + corpusDps.toFixed(0) + '</td><td class="right">' + corruptedDps.toFixed(0) + '</td>';

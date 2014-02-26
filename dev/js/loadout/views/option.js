@@ -48,7 +48,7 @@ function   ($, _, Backbone, Weapons) {
             if(categoryList.length === 0){
                 var weaponArray = Weapons.weaponList.where({weaponType:selected});
                 for(var i = 0;i<weaponArray.length;i++){
-                    categoryList.add(new weaponArray[i].constructor());
+                    categoryList.add(new weaponArray[i].constructor("categoryLoad"));
                 };
                 categoryList.trigger('weaponLoad');
             }

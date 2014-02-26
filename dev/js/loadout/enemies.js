@@ -379,6 +379,170 @@ function   ($, _, Backbone, Auras) {
                 var localShieldDotDps = 0;
                 var localHealthDps = 0;
                 var localHealthDotDps = 0;
+//                var healthDpsMultiplier = 1;
+//                // Who needs for loops?
+//                var totalNoModifiersDamage = (alternatives[alt]['Corrosive']|| 0) +
+//                        (alternatives[alt]['Viral']|| 0) +
+//                        (alternatives[alt]['Gas']|| 0) +
+//                        (alternatives[alt]['Magnetic']|| 0) +
+//                        (alternatives[alt]['Radiation']|| 0) +
+//                        (alternatives[alt]['Blast']|| 0) +
+//                        (alternatives[alt]['Fire']|| 0) +
+//                        (alternatives[alt]['Toxic']|| 0) +
+//                        (alternatives[alt]['Electrical']|| 0) +
+//                        (alternatives[alt]['Freeze']|| 0) +
+//                        (alternatives[alt]['Impact']|| 0) +
+//                        (alternatives[alt]['Piercing']|| 0) +
+//                        (alternatives[alt]['Slashing']|| 0);
+//                var dmCorrosive = 1+damageMultipliers['Corrosive']||1, 
+//                        dmViral = 1+damageMultipliers['Viral']||1,
+//                        dmGas = 1+damageMultipliers['Gas']||1,
+//                        dmMagnetic = 1+damageMultipliers['Magnetic']||1,
+//                        dmRadiation = 1+damageMultipliers['Radiation']||1,
+//                        dmBlast = 1+damageMultipliers['Blast']||1,
+//                        dmFire = 1+damageMultipliers['Fire']||1,
+//                        dmToxic = 1+damageMultipliers['Toxic']||1,
+//                        dmElectrical = 1+damageMultipliers['Electrical']||1,
+//                        dmFreeze = 1+damageMultipliers['Freeze']||1,
+//                        dmImpact = 1+damageMultipliers['Impact']||1,
+//                        dmPiercing = 1+damageMultipliers['Piercing']||1,
+//                        dmSlashing = 1+damageMultipliers['Slashing']||1;
+//                var smCorrosive = 1+shieldMultipliers['Corrosive']||1, 
+//                        smViral = 1+shieldMultipliers['Viral']||1,
+//                        smGas = 1+shieldMultipliers['Gas']||1,
+//                        smMagnetic = 1+shieldMultipliers['Magnetic']||1,
+//                        smRadiation = 1+shieldMultipliers['Radiation']||1,
+//                        smBlast = 1+shieldMultipliers['Blast']||1,
+//                        smFire = 1+shieldMultipliers['Fire']||1,
+//                        smToxic = 1+shieldMultipliers['Toxic']||1,
+//                        smElectrical = 1+shieldMultipliers['Electrical']||1,
+//                        smFreeze = 1+damageMultipliers['Freeze']||1,
+//                        smImpact = 1+damageMultipliers['Impact']||1,
+//                        smPiercing = 1+damageMultipliers['Piercing']||1,
+//                        smSlashing = 1+damageMultipliers['Slashing']||1;
+//                var amCorrosive = armorMultipliers['Corrosive']||0,
+//                        amViral = armorMultipliers['Viral']||0,
+//                        amGas = armorMultipliers['Gas']||0,
+//                        amMagnetic = armorMultipliers['Magnetic']||0,
+//                        amRadiation = armorMultipliers['Radiation']||0,
+//                        amBlast = armorMultipliers['Blast']||0,
+//                        amFire = armorMultipliers['Fire']||0,
+//                        amToxic = armorMultipliers['Toxic']||0,
+//                        amElectrical = armorMultipliers['Electrical']||0,
+//                        amFreeze = armorMultipliers['Freeze']||0,
+//                        amImpact = armorMultipliers['Impact']||0,
+//                        amPiercing = armorMultipliers['Piercing']||0,
+//                        amSlashing = armorMultipliers['Slashing']||0;
+//                var damageCorrosive = ((alternatives[alt]['Corrosive']|| 0) * dmCorrosive * (300 / (armor * (1-amCorrosive) + 300)) * (1+amCorrosive)),
+//                        damageViral = ((alternatives[alt]['Viral'] || 0) * dmViral * (300 / (armor * (1-amViral) + 300)) * (1+amViral)),
+//                        damageGas = ((alternatives[alt]['Gas'] || 0) * dmGas * (300 / (armor * (1-amGas) + 300)) * (1+amGas)),
+//                        damageMagnetic = ((alternatives[alt]['Magnetic'] || 0) * dmMagnetic * (300 / (armor * (1-amMagnetic) + 300)) * (1+amMagnetic)),
+//                        damageRadiation = ((alternatives[alt]['Radiation'] || 0) * dmRadiation * (300 / (armor * (1-amRadiation) + 300)) * (1+amRadiation)),
+//                        damageBlast = ((alternatives[alt]['Blast'] || 0) * dmBlast * (300 / (armor * (1-amBlast) + 300)) * (1+amBlast)),
+//                        damageFire = ((alternatives[alt]['Fire'] || 0) * dmFire * (300 / (armor * (1-amFire) + 300)) * (1+amFire)),
+//                        damageToxic = ((alternatives[alt]['Toxic'] || 0) * dmToxic * (300 / (armor * (1-amToxic) + 300)) * (1+amToxic)),
+//                        damageElectrical = ((alternatives[alt]['Electrical'] || 0) * dmElectrical * (300 / (armor * (1-amElectrical) + 300)) * (1+amElectrical)),
+//                        damageFreeze = ((alternatives[alt]['Freeze'] || 0) * dmFreeze * (300 / (armor * (1-amFreeze) + 300)) * (1+amFreeze)),
+//                        damageImpact = ((alternatives[alt]['Impact'] || 0) * dmImpact * (300 / (armor * (1-amImpact) + 300)) * (1+amImpact)),
+//                        damagePiercing = ((alternatives[alt]['Piercing'] || 0) * dmPiercing * (300 / (armor * (1-amPiercing) + 300)) * (1+amPiercing)),
+//                        damageSlasing = ((alternatives[alt]['Slashing'] || 0) * dmSlashing * (300 / (armor * (1-amSlashing) + 300)) * (1+amSlashing));
+//                var shieldDamageCorrosive = ((alternatives[alt]['Corrosive']|| 0) * smCorrosive),
+//                        shieldDamageViral = ((alternatives[alt]['Viral'] || 0) * smViral),
+//                        shieldDamageGas = ((alternatives[alt]['Gas'] || 0) * smGas),
+//                        shieldDamageMagnetic = ((alternatives[alt]['Magnetic'] || 0) * smMagnetic),
+//                        shieldDamageRadiation = ((alternatives[alt]['Radiation'] || 0) * smRadiation),
+//                        shieldDamageBlast = ((alternatives[alt]['Blast'] || 0) * smBlast),
+//                        shieldDamageFire = ((alternatives[alt]['Fire'] || 0) * smFire),
+//                        shieldDamageToxic = ((alternatives[alt]['Toxic'] || 0) * smToxic),
+//                        shieldDamageElectrical = ((alternatives[alt]['Electrical'] || 0) * smElectrical),
+//                        shieldDamageFreeze = ((alternatives[alt]['Freeze'] || 0) * smFreeze),
+//                        shieldDamageImpact = ((alternatives[alt]['Impact'] || 0) * smImpact),
+//                        shieldDamagePiercing = ((alternatives[alt]['Piercing'] || 0) * smPiercing),
+//                        shieldDamageSlasing = ((alternatives[alt]['Slashing'] || 0) * smSlashing);
+//                var totalNonDotDamage = damageCorrosive + 
+//                        damageViral + 
+//                        damageGas + 
+//                        damageMagnetic + 
+//                        damageRadiation + 
+//                        damageBlast + 
+//                        damageFire + 
+//                        damageToxic + 
+//                        damageElectrical + 
+//                        damageFreeze + 
+//                        damageImpact + 
+//                        damagePiercing + 
+//                        damageSlasing;
+//                var shieldTotalNonDotDamage = shieldDamageCorrosive + 
+//                        shieldDamageViral + 
+//                        shieldDamageGas + 
+//                        shieldDamageMagnetic + 
+//                        shieldDamageRadiation + 
+//                        shieldDamageBlast + 
+//                        shieldDamageFire + 
+//                        shieldDamageToxic + 
+//                        shieldDamageElectrical + 
+//                        shieldDamageFreeze + 
+//                        shieldDamageImpact + 
+//                        shieldDamagePiercing + 
+//                        shieldDamageSlasing;
+//                var dotList = {};
+//                var shieldRatio = shield/(shield+health);
+//                // (health+shield) / ((localShieldDps * shieldRatio) + (localHealthDps * (1-shieldRatio)));
+//                var baseDps = ((shieldTotalNonDotDamage * dpsFactor * shieldRatio) + (totalNonDotDamage * dpsFactor * (1-shieldRatio)));
+//                var baseTTK = (health+shield) / baseDps;
+//                var firedRounds = Math.max(baseTTK * result['Fire Rate'] * result['MultiShotMultiplier'], 1);
+//                var roundsPerSecond = result['Fire Rate'] * result['MultiShotMultiplier'];
+//                var roundsPerSecondChance = result['Fire Rate'] * result['MultiShotMultiplier'] * result['stats']['Status Chance'];
+                
+                // Status procs
+                
+//                if(alternatives[alt]['Corrosive'] > 0){
+//                    var corrosiveArmorMultiplier = 0.75;
+//                    var elementPartRatio = (alternatives[alt]['Corrosive']|| 0) / totalNoModifiersDamage;
+//                    // We remove the first shot as the damage is applied before the proc
+//                    var corrosiveStacks = (firedRounds-1)*result['stats']['Status Chance']*elementPartRatio;
+//                    var corrosiveArmorEffect =  Math.pow(corrosiveArmorMultiplier, corrosiveStacks);
+//                    
+//                    armor *= corrosiveArmorEffect;
+//                    
+////                    if(this.get('name') === "Grineer"){
+////                        console.log("---");
+////                        console.log(baseDps);
+////                        console.log(this.get('name'));
+////                        console.log(health);
+////                        console.log(shield);
+////                        console.log(baseTTK);
+////                        console.log(elementPartRatio);
+////                        console.log("Status Chance: " + result['stats']['Status Chance']);
+////                        console.log("corrosiveStacks: " + corrosiveStacks);
+////                        console.log("corrosiveArmorEffect: " + corrosiveArmorEffect);
+////                        console.log("armor: " + armor);
+////                        console.log("firedRounds: " + firedRounds);
+////                        console.log(result['MultiShotMultiplier']);
+////                    }
+//                }
+//                
+//                
+//                
+//                if(alternatives[alt]['Electrical']>0){
+//                    var elementPartRatio = (alternatives[alt]['Electrical']|| 0) / totalNoModifiersDamage;
+//                    var numProcs = firedRounds * result['stats']['Status Chance'] * elementPartRatio;
+//
+//                    //var procsPerSecond = result['Fire Rate'] * result['MultiShotMultiplier'] * result['stats']['Status Chance']* elementPartRatio;
+//                    //var maxStacks = procsPerSecond*Math.min(baseTTK, 7);
+//                    // The fire dot deals twice the damage dealth over 7 ticks, at one tick per second
+//                    // For the average we divide by two, canceling out the double damage above
+//                    var procDamageDone = numProcs * totalNoModifiersDamage*0.25;
+////                    console.log("---");
+////                    console.log(baseTTK);
+////                    console.log(numProcs);
+////                    console.log(elementPartRatio);
+////                    //console.log(procsPerSecond);
+////                    //console.log(maxStacks);
+////                    console.log(procDamageDone);
+////                    console.log(totalNoModifiersDamage);
+//                    alternatives[alt]['Electrical'] += procDamageDone;
+//                }
                 
                 // We iterate over the alternatives and add the specific dot elements, so they get processed
                 // in the for-loop below
@@ -470,7 +634,134 @@ function   ($, _, Backbone, Auras) {
                         }
                     }
                 }
-
+//                
+//                 // Status procs
+//                 var dotFactorHealth = {};
+//                 var dotFactorShield = {};
+//                 var combinedDps = (localShieldDps * shieldRatio) + (localHealthDps * (1-shieldRatio));
+//                 var viralUptime = 0;
+//                 
+//                 if(alternatives[alt]['Fire']>0){
+////                     var dotTicks = 7;
+////                     var dotTime = 7;
+////                     var tickTime = 1;
+//                     var factor = 2;
+//                     var elementPartRatio = (alternatives[alt]['Fire']|| 0) / totalNoModifiersDamage;
+//                     var procsPerSecond = roundsPerSecondChance * elementPartRatio;
+//                     var procFactor = procsPerSecond * factor; // Should also be "* tickTime/dotTicks" but it's 1.
+//                     dotFactorHealth['Fire'] = procFactor * dmFire;
+//                     dotFactorShield['Fire'] = procFactor * smFire;
+//                 }
+//                 
+//                 if(alternatives[alt]['Toxic']>0){
+////                     var dotTicks = 9;
+////                     var dotTime = 9;
+////                     var tickTime = 1;
+//                     var factor = 2.25;
+//                     var elementPartRatio = (alternatives[alt]['Toxic']|| 0) / totalNoModifiersDamage;
+//                     var procsPerSecond = roundsPerSecondChance * elementPartRatio;
+//                     var procFactor = procsPerSecond * factor; // tickTime/dotTicks is 1
+//                     dotFactorHealth['Toxic'] = procFactor * dmToxic;
+//                     dotFactorShield['Toxic'] = procFactor * smToxic;
+//                 }
+//                 
+//                 if(specialDamage['DoT']){
+//                     var dotTicks = specialDamage['DoT']['Ticks'];
+//                     var tickTime = specialDamage['DoT']['ticksPerSecond'];
+//                     for(var key in specialDamage['DoT']['damageBreakdown']){
+//                         var procFactor = roundsPerSecond * specialDamage['DoT']['factor'] * tickTime / dotTicks ;
+//                         if(!dotFactorHealth[key]){dotFactorHealth[key] = 0;}
+//                         if(!dotFactorShield[key]){dotFactorShield[key] = 0;}
+//                         dotFactorHealth[key] += procFactor * (1+damageMultipliers[key]||1);
+//                         dotFactorShield[key] += procFactor * (1+shieldMultipliers[key]||1);
+//                     }
+//                 }
+//                 
+//                 //var combinedDotDps = (dotDpsShield['Toxic'] + dotDpsShield['Fire']) * shieldRatio + (dotDpsHealth['Toxic']* (300 / (armor * (1-amToxic) + 300)) * (1+amToxic)) + dotDpsHealth['Fire']) * (1-shieldRatio);
+//                 //var testTTK = (health+shield) / (combinedDps + combinedDotDps);
+//                 //console.log()
+//                 
+//                 if(alternatives[alt]['Viral'] > 0){
+//                     var viralDpsMultiplier = 2;
+//                     var viralDuration = 6;
+//                     var elementPartRatio = (alternatives[alt]['Toxic']|| 0) / totalNoModifiersDamage;
+//                     var procsPerSecond = roundsPerSecondChance * elementPartRatio;
+//                     var avgFirstProc = (procsPerSecond + 1/roundsPerSecond)/2;
+//                     viralUptime = Math.min(procsPerSecond * viralDuration, 1);
+//                 }
+//                 
+//                 if(alternatives[alt]['Fire']>0){
+//                    var elementPartRatio = (alternatives[alt]['Fire']|| 0) / totalNoModifiersDamage;
+//                    var numProcs = firedRounds * result['stats']['Status Chance'] * elementPartRatio;
+//                    var dotTicks = 7;
+//                    var dotTime = 7;
+//                    //var procsPerSecond = result['Fire Rate'] * result['MultiShotMultiplier'] * result['stats']['Status Chance']* elementPartRatio;
+//                    //var maxStacks = procsPerSecond*Math.min(baseTTK, 7);
+//                    // The fire dot deals twice the damage dealth over 7 ticks, at one tick per second
+//                    var procDamageDone = numProcs * totalNoModifiersDamage*2/dotTicks * Math.min(baseTTK, dotTime) - 
+//                            Math.max(Math.min(dotTicks-1, baseTTK-1)*totalNoModifiersDamage*2/dotTicks * Math.min(baseTTK, dotTime)/2, 0);
+////                    console.log("---");
+////                    console.log(baseTTK);
+////                    console.log(numProcs);
+////                    console.log(elementPartRatio);
+////                    //console.log(procsPerSecond);
+////                    //console.log(maxStacks);
+////                    console.log(procDamageDone);
+////                    console.log(totalNoModifiersDamage);
+//                    alternatives[alt]['Fire'] += procDamageDone;
+//                }
+//                
+//                if(alternatives[alt]['Toxic']>0){
+//                    var elementPartRatio = (alternatives[alt]['Toxic']|| 0) / totalNoModifiersDamage;
+//                    var numProcs = firedRounds * result['stats']['Status Chance'] * elementPartRatio;
+//                    var dotTicks = 9;
+//                    var dotTime = 9;
+//                    //var procsPerSecond = result['Fire Rate'] * result['MultiShotMultiplier'] * result['stats']['Status Chance']* elementPartRatio;
+//                    //var maxStacks = procsPerSecond*Math.min(baseTTK, 7);
+//                    // The fire dot deals twice the damage dealth over 7 ticks, at one tick per second
+//                    // For the average we divide by two, canceling out the double damage above
+//                    var procDamageDone = numProcs * totalNoModifiersDamage*2/dotTicks * Math.min(baseTTK, dotTime) - 
+//                            Math.max(Math.min(dotTicks-1, baseTTK-1)*totalNoModifiersDamage*2/dotTicks * Math.min(baseTTK, dotTime)/2, 0);
+////                    console.log("---");
+////                    console.log(baseTTK);
+////                    console.log(numProcs);
+////                    console.log(elementPartRatio);
+////                    //console.log(procsPerSecond);
+////                    //console.log(maxStacks);
+////                    console.log(procDamageDone);
+////                    console.log(totalNoModifiersDamage);
+//                    alternatives[alt]['Toxic'] += procDamageDone;
+//                }
+//                
+//                if(alternatives[alt]['Viral'] > 0){
+//                    var viralDpsMultiplier = 2;
+//                    var viralDuration = 6;
+//                    var elementPartRatio = (alternatives[alt]['Viral']|| 0) / totalNoModifiersDamage;
+//                    var shieldRatio = shield/(shield+health);
+//                    //var baseTTK = (health+shield) / ((localShieldDps * shieldRatio) + (localHealthDps * (1-shieldRatio)));
+//                    //var firedRounds = Math.max(baseTTK * result['Fire Rate'] * result['MultiShotMultiplier'], 1);
+//                    // We remove the first shot as the damage is applied before the proc
+//                    var shotsAffectedByViralProcs = Math.min((firedRounds-1)*result['stats']['Status Chance'], 1)* elementPartRatio * Math.min(baseTTK, viralDuration);
+//                    var shotsAffectedByViralProcsRatio = shotsAffectedByViralProcs / firedRounds;
+//                    var viralDpsEffect = Math.max(1 + shotsAffectedByViralProcsRatio * viralDpsMultiplier, 1);
+//                    var viralFactorEffect = 1/viralDpsEffect;
+//                    
+//                    health *= viralFactorEffect;
+//                    healthDpsMultiplier = viralDpsEffect;
+////                    if(this.get('name') === "Infested"){
+////                        console.log("---");
+////                        console.log(this.get('name'));
+////                        console.log((alternatives[alt]['Viral'] * dmViral * (300 / (armor * (1-amViral) + 300)) * (1+amViral)));
+////                        console.log(totalNonDotDamage);
+////                        console.log(elementPartRatio);
+////                        console.log("healthDpsMultiplier: " + healthDpsMultiplier);
+////                    }
+//                }
+//                
+//                // Add the effect of Viral procs on DPS.
+//                localHealthDps *= healthDpsMultiplier;
+//                localHealthDotDps *= healthDpsMultiplier;
+                
                 if(specialDamage['DoT']){
                     if(specialDamage['DoT']['damageBreakdown'][key]){
                         // We calculate how long it'll take to kill an enemy with an infinitely stacking dot
@@ -515,6 +806,8 @@ function   ($, _, Backbone, Auras) {
                 }
                 
                 var shieldRatio = shield/(shield+health);
+                
+               
                 
                 // Transform total damage to DPS
                 alternatives[alt]['DPS'] = (localShieldDps * shieldRatio) + (localHealthDps * (1-shieldRatio));

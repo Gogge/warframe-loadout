@@ -1,5 +1,5 @@
 /**
- * Warframe Loadout 12.0.1 revision 2
+ * Warframe Loadout 12.2.1 revision 6
  * http://dpsframe.com
  * Copyright 2013 Göran Christensen
  * Released under MIT license
@@ -208,10 +208,11 @@ function   ($, _, Backbone, Modules, Weapons, Enemies, Auras, OptionView, Weapon
         // Weapons
         //
         
+        // Load the category to show from cookies, or pistol by default.
         var weaponArray = Weapons.weaponList.where({weaponType:selected});
         var categoryList = weaponCategoriesList[selected.charAt(0).toUpperCase() + selected.slice(1)];
         for(var i = 0;i<weaponArray.length;i++){
-            categoryList.add(new weaponArray[i].constructor());
+            categoryList.add(new weaponArray[i].constructor("pageInitCategoryLoad"));
         };
         setTimeout(function(){
             weaponView.render();

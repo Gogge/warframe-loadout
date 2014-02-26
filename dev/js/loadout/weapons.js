@@ -6,10 +6,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
     //
 
     Weapon = Backbone.Model.extend({
-       initialize:function(){
+       initialize:function(loadType){           
         // Set modules if not set in the weapon's own constructor
         if(!this.get('modules')){this.set('modules', Modules.getNewPistolModCollection());};
-        // Set mauras if not set in the weapon's own constructor
+        // Set auras if not set in the weapon's own constructor
         if(!this.get('auras')){this.set('auras', Auras.getNewAuraCollection());};
         // Set default ammo capacity based on weapon type
         switch(this.get('weaponType')){
@@ -32,7 +32,14 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 this.set('Ammo Capacity', Infinity);
                 break;
         }
-        this.updateModuleDps();
+        
+        // At page init we create a list of all weapons to easily access the 
+        // constructors, these don't need to iterate over modules so we use
+        // loadType to signal that they need to calculate DPS
+        if(loadType){
+            this.updateModuleDps();
+        }
+
        },
        defaults: {
            name:"Default weapon"
@@ -62,7 +69,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             //var damageType = this.get('damageType');
             var weaponType = this.get('weaponType');
             var projectiles = this.get('Projectiles') || 1;
+            var baseProjectiles = projectiles;
             var ammoCapacity = this.get('Ammo Capacity');
+            var burstRounds = this.get('Burst Rounds') || 1;
             var result = {};
             result['damageBreakdown'] = {};
             result['damageBreakdown']['Piercing'] = 0;
@@ -88,19 +97,23 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             // Fire rate, magazine capacity, and status proc chance
             //
             
-            var fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
-            
-            //var fireRate = 1.0;
-            //if (this.get('continous')){
-            //    fireRate = this.get('Fire Rate');
-            //} else {
-            //    fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
-            //}
-
             // Note that the "'Reload Speed'" attribute is really reload time
             var reloadSpeed = this.get('Reload Speed') / ((100 + module_types['Reload Speed']) / 100);
             var magazineCapacity = Math.round(this.get('Magazine Capacity') * (100 + module_types['Magazine Capacity']) / 100);
             var statusChance = (this.get('Status Chance') * (100 + module_types['Status Chance']) / 100) / 100;
+            
+            var fireRate = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
+            
+            // Burst weapons use the weapon fire rate to trigger bursts, then uses specific burst delays between the shots in the burst
+            if (burstRounds > 1){
+                var numBursts = magazineCapacity / burstRounds;
+                // The delay between each round fired in the bursts, the 0.0275 number is the base burst delay for each round
+                var burstDelay = ((this.get('Delay') || 1) + 0.0185) * magazineCapacity;
+                // The time it takes between each big burst
+                var baseFireTime = numBursts/fireRate;
+                var endDelay = numBursts * 0;//0.00833; // Magic number based on average half a frame at 60 FPS
+                fireRate = magazineCapacity / (baseFireTime + burstDelay + endDelay);
+            }
             
             // 
             // Auras 
@@ -218,7 +231,8 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['dpsBreakdown'] = {};
             result['burstBreakdown'] = {};
             var multishotDamage = 0.0;
-            projectiles *= 1 + module_types['Multishot'] / 100;
+            var multiShotMultiplier = 1 + module_types['Multishot'] / 100;
+            projectiles *= multiShotMultiplier;
             for (var key in result['damageBreakdown']){
                 // Add multishot
                 multishotDamage += result['damageBreakdown'][key] * module_types['Multishot'] / 100;
@@ -251,7 +265,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['dps'] = dps;
             result['shot'] = totalDamage;
             result['burst'] = burst;
-            result['procs'] = statusChance * projectiles;
+            result['procs'] = statusChance * multiShotMultiplier;
             //result['baseDamage'] = baseDamage;
             //result['criticalDamage'] = criticalDamage;
             result['multishotDamage'] = multishotDamage;
@@ -261,6 +275,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             result['Crit Chance'] = statCritChance;
             result['Crit Damage'] = statCritDamage;
             result['Multishot'] = module_types['Multishot'];
+            result['MultiShotMultiplier'] = multiShotMultiplier;
             
             result['specialDamage'] = specialDamage;
             
@@ -295,24 +310,60 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 result['baseDamageType'] = 'Freeze';
             }
             
+            // The stats result is used to populate the stats table
+            
             result['stats'] = {};
             result['stats']['Fire Rate'] = fireRate;
+            if (burstRounds > 1){
+                result['stats']['Fire Rate'] = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
+                result['stats']['Fire Rate (burst)'] = fireRate;
+                result['stats']['Burst Rounds'] = this.get('Burst Rounds');
+            } 
+            
             result['stats']['Reload Speed'] = reloadSpeed;
             result['stats']['Magazine Capacity'] = magazineCapacity;
             result['stats']['Crit Chance'] = statCritChance;
             result['stats']['Crit Damage'] = statCritDamage;
             result['stats']['Status Chance'] = statusChance;
-            // stat_name += " (" + ((1 - Math.pow((1 - stat_value), proc_chances)) * 100).toFixed(1) + "%)";
-            result['stats']['Status Probability'] = (1 - Math.pow((1 - statusChance), projectiles)) * 100;
-            result['stats']['Avg. Procs/Shot'] = statusChance * projectiles;
+            if (baseProjectiles > 1) {
+                result['stats']['Per Projectile Chance'] = statusChance / baseProjectiles;
+            }
+            result['stats']['Status Probability'] = (1 - Math.pow((1 - statusChance), multiShotMultiplier)) * 100;
+            result['stats']['Avg. Procs/Shot'] = statusChance * multiShotMultiplier;
             result['stats']['Projectiles'] = projectiles;
             result['stats']['Time Firing'] = (magazineCapacity / fireRate)/((magazineCapacity / fireRate) + reloadSpeed);
             result['stats']['Ammo Lasts'] = ((ammoCapacity + magazineCapacity) / fireRate) + ((ammoCapacity + magazineCapacity) / magazineCapacity) * (reloadSpeed || 0.00001);
             
-            //result['ancientDps'] = infestedAncient.getDamageTaken(result, 25, corrosiveProjection);
-            //result['napalmDps'] = grineerNapalm.getDamageTaken(result, 25, corrosiveProjection);
-            //result['techDps'] = corpusTech.getDamageTaken(result, 25, corrosiveProjection);
-            //result['moaDps'] = corpusMoa.getDamageTaken(result, 25, corrosiveProjection);
+            // baseStats is used to populate the popup when mouse-overing the stats table
+            
+            result['baseStats'] = {};
+            result['baseStats']['Fire Rate'] = this.get('Fire Rate') * (100 + module_types['Fire Rate']) / 100;
+            if (burstRounds > 1){
+                var numBursts = this.get('Magazine Capacity') / this.get('Burst Rounds');
+                var burstDelay = ((this.get('Delay') || 1) + 0.0275) * this.get('Magazine Capacity'); 
+                var baseFireTime = numBursts/this.get('Fire Rate');
+                var endDelay = numBursts * 0.00833;
+                result['baseStats']['Fire Rate (burst)'] = this.get('Magazine Capacity') / (baseFireTime + burstDelay + endDelay);
+                result['baseStats']['Burst Rounds'] = this.get('Burst Rounds');
+            } 
+            
+            result['baseStats']['Reload Speed'] = this.get('Reload Speed');
+            result['baseStats']['Magazine Capacity'] = this.get('Magazine Capacity');
+            result['baseStats']['Crit Chance'] = this.get('Crit Chance');
+            result['baseStats']['Crit Damage'] = this.get('Crit Damage');
+            result['baseStats']['Status Chance'] = this.get('Status Chance');
+            result['baseStats']['Status Probability'] = (1 - Math.pow((1 - this.get('Status Chance')/100), baseProjectiles )) * 100;
+            if (baseProjectiles > 1) {
+                result['baseStats']['Per Projectile Chance'] = this.get('Status Chance') / baseProjectiles;
+                result['baseStats']['Status Probability'] = (1 - Math.pow((1 - (this.get('Status Chance')/100)/baseProjectiles), baseProjectiles )) * 100;
+            }
+            
+            result['baseStats']['Avg. Procs/Shot'] = statusChance;
+            result['baseStats']['Projectiles'] = baseProjectiles;
+            result['baseStats']['Time Firing'] = (this.get('Magazine Capacity') / this.get('Fire Rate'))/((this.get('Magazine Capacity') / this.get('Fire Rate')) + this.get('Reload Speed'));
+            result['baseStats']['Ammo Lasts'] = ((ammoCapacity + this.get('Magazine Capacity')) / this.get('Fire Rate')) + ((ammoCapacity + this.get('Magazine Capacity')) / this.get('Magazine Capacity')) * (this.get('Reload Speed') || 0.00001);
+            
+            
             result['infestedDps'] = infested.getDamageTaken(result, 25, corrosiveProjection);
             result['grineerDps'] = grineer.getDamageTaken(result, 25, corrosiveProjection);
             result['corpusDps'] = corpus.getDamageTaken(result, 25, corrosiveProjection);
@@ -320,15 +371,11 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             var apDps = 0; //new Enemies.AncientDisruptor().getDamageTaken(result, 200, corrosiveProjection);
             result['apdps'] = apDps;
             
-//            result['ancient'] = infestedAncient;
-//            result['napalm'] = grineerNapalm;
-//            result['tech'] = corpusTech;
-//            result['moa'] = corpusMoa;
             result['infested'] = infested;
             result['grineer'] = grineer;
             result['corpus'] = corpus;
             result['corrupted'] = corrupted;
-            
+
             return result;
         },
         updateModuleDps:function(){
@@ -504,9 +551,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
     weaponList = new WeaponCollection([
 
         new (Acrid = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"pistol", 
@@ -535,14 +582,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 damage['DoT']['damageBreakdown']['Toxic'] =  baseDamage * 0.5 * 9;
                 damage['DoT']['ticks'] = 9;
                 damage['DoT']['ticksPerSecond'] = 1;
+                damage['DoT']['factor'] = 4.5;
                 return damage;
             }
         })),
         
         new (Afuris = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -561,10 +609,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Akbolto = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Akbolto init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -583,10 +631,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Aklato = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Aklato init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -607,9 +655,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Aklex = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -628,9 +676,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Akmagnus = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection('akmagnus'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -649,10 +697,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Akstiletto = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Dual Vastos init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -671,10 +719,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Akvasto = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Dual Vastos init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -693,19 +741,21 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Ballistica = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
             name : "Ballistica (burst)",
             masteryRank:0,
+             'Burst Rounds':4,
+             Delay:0.05,
             'Impact':6.25,
             'Piercing':12.5,
             'Slashing':6.25,
             'Status Chance':2.5,
-            'Fire Rate' : 3.3, 
+            'Fire Rate' : 6.67, 
             'Magazine Capacity' : 16, 
             'Reload Speed' : 2.0, 
             'Crit Chance' : 0.025, 
@@ -714,9 +764,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (BallisticaCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -735,9 +785,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Bolto = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -756,9 +806,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Brakk = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -778,10 +828,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Bronco = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Bronco init!");
              this.set('modules', Modules.getNewPistolModCollection('bronco'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -801,10 +851,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (BroncoPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Bronco Prime init!");
              this.set('modules', Modules.getNewPistolModCollection('bronco'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -823,11 +873,38 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
            }
         })),
         
+        new (Castanas = Weapon.extend({
+           initialize:function(loadType){
+             //console.log("Bronco Prime init!");
+             this.set('modules', Modules.getNewPistolModCollection('castanas'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
+           },
+           defaults:{
+            weaponType:"pistol", 
+            name : "Castanas",
+            masteryRank:3,
+            'Electrical':100,
+            'Status Chance':10,
+            'Fire Rate' : 5.0, 
+            'Magazine Capacity' : 2, 
+            'Reload Speed' : 1.0, 
+            'Crit Chance' : 0.05, 
+            'Crit Damage' : 1.5  
+           },
+           specialDamageCalculations:function(damageBreakdown, module_types){
+               var baseExplosionDamage = this.get('Electrical')/2 * (100 + module_types['Damage']) / 100;
+               baseExplosionDamage = baseExplosionDamage * (100 + module_types['Faction Damage']) / 100;
+               var damage = {};
+               damage['Electrical'] = baseExplosionDamage;
+               return damage
+            }
+        })),
+        
         new (Cestra = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Despair init!");
              this.set('modules', Modules.getNewPistolModCollection('cestra'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -848,10 +925,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Despair = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Despair init!");
              this.set('modules', Modules.getNewPistolModCollection('cestra'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -870,10 +947,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Detron = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Despair init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -891,10 +968,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (DualBroncos = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Dual Broncos init!");
              this.set('modules', Modules.getNewPistolModCollection('bronco'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -914,15 +991,15 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (DualCestra = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Dual Broncos init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
             name : "Dual Cestra",
-            masteryRank:0,
+            masteryRank:4,
             Projectiles:0,
             'Impact':5,
             'Piercing':20,
@@ -936,10 +1013,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Embolist = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Embolist init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             continous:true,
@@ -969,15 +1046,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 damage['DoT']['damageBreakdown']['Toxic'] =  baseDamage * 0.5 * 9;
                 damage['DoT']['ticks'] = 9;
                 damage['DoT']['ticksPerSecond'] = 1;
+                damage['DoT']['factor'] = 4.5;
                 return damage;
             }
         })),
 
         new (Furis = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Furis init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -998,10 +1076,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Hikou = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Furis init!");
              this.set('modules', Modules.getNewPistolModCollection('cestra'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1020,32 +1098,34 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Kraken = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Kraken init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
             name : "Kraken",
             masteryRank:0,
-            'Impact':33.8,
-            'Piercing':5.6,
-            'Slashing':5.6,
+             'Burst Rounds':2,
+             Delay:0.05,
+            'Impact':33.75,
+            'Piercing':5.625,
+            'Slashing':5.625,
             'Status Chance':10,
-            'Fire Rate' : 2.8,
+            'Fire Rate' : 2.83,
             'Magazine Capacity' : 14, 
-            'Reload Speed' : 2.4, 
-            'Crit Chance' : 0.025, 
+            'Reload Speed' : 2.45, 
+            'Crit Chance' : 0.05, 
             'Crit Damage' : 2.0  
            }
         })),
 
         new (Kunai = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Kraken init!");
              this.set('modules', Modules.getNewPistolModCollection('cestra'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1064,10 +1144,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Lato = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Lato init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1086,10 +1166,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (LatoPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Lato Prime init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1108,10 +1188,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (LatoVandal = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Lato Prime init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1130,10 +1210,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Lex = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Lex init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1152,10 +1232,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Magnus = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Lex init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1174,10 +1254,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Seer = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Seer init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1196,37 +1276,41 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Sicarus = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Sicarus init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
             name : "Sicarus",
             masteryRank:1,
+             'Burst Rounds':3,
+             Delay:0.04,
             'Impact':21,
             'Piercing':4.5,
             'Slashing':4.5,
             'Status Chance':2.5,
             'Fire Rate' : 3.5,
             'Magazine Capacity' : 15, 
-            'Reload Speed' : 1.9, 
+            'Reload Speed' : 2.0, 
             'Crit Chance' : 0.10, 
             'Crit Damage' : 2.0  
            }
         })),
         
         new (SicarusPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Sicarus init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
             name : "Sicarus Prime",
             masteryRank:1,
+             'Burst Rounds':3,
+             Delay:0.04,
             'Impact':12.8,
             'Piercing':9.6,
             'Slashing':9.6,
@@ -1240,10 +1324,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Spectra = Weapon.extend({
-           initialize:function(){
-             //console.log("Spectra init!");
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             continous:true,
@@ -1253,7 +1336,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Impact':0.8,
             'Piercing':5.6,
             'Slashing':1.6,
-            'Status Chance':2,
+            'Status Chance':20,
             'Fire Rate' : 10.0,
             'Magazine Capacity' : 50, 
             'Reload Speed' : 2.0, 
@@ -1263,10 +1346,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Stug = Weapon.extend({
-           initialize:function(){
-             //console.log("Spectra init!");
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1291,15 +1373,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 damage['DoT']['damageBreakdown']['Corrosive'] =  baseDamage * 0.06 * 2;
                 damage['DoT']['ticks'] = 2;
                 damage['DoT']['ticksPerSecond'] = 1;
+                damage['DoT']['factor'] = 0.12;
                 return damage;
             }
         })),
         
         new (StugCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Spectra init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
              this.set('Ammo Capacity', 63);
            },
            defaults:{
@@ -1325,15 +1408,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
                 damage['DoT']['damageBreakdown']['Corrosive'] =  baseDamage * 0.06 * 2;
                 damage['DoT']['ticks'] = 2;
                 damage['DoT']['ticksPerSecond'] = 1;
+                damage['DoT']['factor'] = 0.12;
                 return damage;
             }
         })),
 
         new (TwinGremlins = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Twin Gremlins init!");
              this.set('modules', Modules.getNewPistolModCollection('cestra'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1352,10 +1436,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (TwinVipers = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Twin Vipers init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1374,10 +1458,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Tysis = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Twin Vipers init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1394,10 +1478,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Vasto = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Vasto init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1416,10 +1500,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Viper = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Viper init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1438,10 +1522,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (WraithTwinVipers = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Twin Vipers init!");
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"pistol", 
@@ -1464,10 +1548,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
 
         new (Boltor = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Boltor init!");
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1486,9 +1570,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Braton = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1507,9 +1591,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (BratonPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1528,9 +1612,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (BratonVandal = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1549,14 +1633,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Burston = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('burst'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
              name : "Burston",
              masteryRank:0,
+             'Burst Rounds':3,
+             Delay:0.03,
              'Impact':10,
              'Piercing':10,
              'Slashing':10,
@@ -1570,14 +1656,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (BurstonPrime = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('burst'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
              name : "Burston Prime",
              masteryRank:0,
+             'Burst Rounds':3,
+             Delay:0.04,
              'Impact':11.7,
              'Piercing':11.7,
              'Slashing':15.6,
@@ -1591,9 +1679,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Dera = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1612,10 +1700,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (FluxRifle = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Flux Rifle init!");
              this.set('modules', Modules.getNewRifleModCollection('continous'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              continous:true,
@@ -1635,10 +1723,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Gorgon = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Gorgon init!");
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"rifle", 
@@ -1657,10 +1745,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Grakata = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Grakata init!");
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"rifle", 
@@ -1677,19 +1765,42 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Crit Damage' : 2.0 
            }
         })),
+        
+        new (Grinlok = Weapon.extend({
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('crit'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
+           },
+           defaults:{
+            weaponType:"rifle", 
+            name : "Grinlok",
+            masteryRank:5,
+            'Impact':60,
+            'Piercing':12,
+            'Slashing':48,
+            'Status Chance':35,
+            'Fire Rate' : 1.67,
+            'Magazine Capacity' : 6,
+            'Reload Speed' : 2.1,
+            'Crit Chance' : 0.15,
+            'Crit Damage' : 2.0
+           }
+        })),
 
         new (Hind = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('burst'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
              name : "Hind",
              masteryRank:0,
-             'Impact':10,
-             'Piercing':10,
-             'Slashing':10,
+             'Burst Rounds':5,
+             Delay:0.06,
+             'Impact':7.5,
+             'Piercing':7.5,
+             'Slashing':15,
              'Status Chance':10,
              'Fire Rate' : 5.0, 
              'Magazine Capacity' : 65, 
@@ -1700,9 +1811,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Ignis = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection('continousElemental'));
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('ignis'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              continous:true,
@@ -1710,7 +1821,7 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
              name : "Ignis",
              masteryRank:4,
              'Fire':10,
-             'Status Chance':1,
+             'Status Chance':10,
              'Fire Rate' : 10, 
              'Magazine Capacity' : 100, 
              'Reload Speed' : 2.0, 
@@ -1720,9 +1831,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Karak = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1741,9 +1852,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Latron = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1762,10 +1873,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (LatronPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Latron Prime init!");
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1784,10 +1895,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Mk1Braton = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Latron Prime init!");
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1806,9 +1917,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Ogris = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('ogris'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -1839,9 +1950,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Penta = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewRifleModCollection('ogris'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -1871,10 +1982,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Soma = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Soma init!");
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"rifle", 
@@ -1893,10 +2004,10 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Supra = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              //console.log("Supra init!");
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"rifle", 
@@ -1915,9 +2026,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Synapse = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('synapse'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             continous:true,
@@ -1935,9 +2046,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Tetra = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             continous:true,
@@ -1956,9 +2067,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Torid = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('torid'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
              weaponType:"rifle", 
@@ -1994,9 +2105,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         // Shotguns
         //
         new (Boar = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2016,9 +2127,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (BoarPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection('sobek'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2038,9 +2149,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Drakgoon = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2060,9 +2171,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (DrakgoonCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2082,9 +2193,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Hek = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2104,18 +2215,18 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Phage = Weapon.extend({
-           initialize:function(){
-             this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+           initialize:function(loadType){
+             this.set('modules', Modules.getNewShotgunModCollection('sobek'));
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
             name : "Phage",
             Projectiles:7,
             masteryRank:0,
-            'Viral':33,
+            'Viral':330,
             'Status Chance':15,
-            'Fire Rate' : 10,
+            'Fire Rate' : 1.0,
             'Magazine Capacity' : 40,
             'Reload Speed' : 2,
             'Crit Chance' : 0.1,
@@ -2124,9 +2235,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Sobek = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection('sobek'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2146,9 +2257,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Strun = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2168,9 +2279,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (StrunWraith = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection('sobek'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2190,9 +2301,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Tigris = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection('tigris'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"shotgun", 
@@ -2215,9 +2326,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         // Sniper Rifles
         //
         new (Lanka = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewSniperModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2235,9 +2346,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Snipetron = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewSniperModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sniper", 
@@ -2256,9 +2367,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (SnipetronVandal = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewSniperModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sniper", 
@@ -2277,9 +2388,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Vectis = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewSniperModCollection('vectis'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2299,9 +2410,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Vulkar = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewSniperModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sniper", 
@@ -2324,9 +2435,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
         
         new (Cernos = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2346,9 +2457,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (CernosCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2368,9 +2479,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Dread = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2390,9 +2501,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (DreadCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2412,9 +2523,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Miter = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2434,9 +2545,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (MiterCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2456,9 +2567,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (Paris = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2478,9 +2589,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (ParisCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2500,9 +2611,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
 
         new (ParisPrime = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2522,9 +2633,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (ParisPrimeCharge = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection('crit'));
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             charge:true,
@@ -2548,30 +2659,32 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         //
         
         new (BurstLaser = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewPistolModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sentinel", 
             name : "Burst Laser",
             masteryRank:0,
-            'Impact':0.7,
-            'Piercing':6.0,
-            'Slashing':0.3,
+            'Burst Rounds':3,
+             Delay:0.4,
+            'Impact':0.6,
+            'Piercing':4.8,
+            'Slashing':0.6,
             'Status Chance':2, 
             'Fire Rate' : 1.5,
             'Magazine Capacity' : 15,
-            'Reload Speed' : 0.0,
+            'Reload Speed' : 0.01,
             'Crit Chance' : 0,
             'Crit Damage' : 1.5
            }
         })),
         
         new (DethMachineRifle = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sentinel", 
@@ -2590,9 +2703,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (LaserRifle = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sentinel", 
@@ -2604,16 +2717,16 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
             'Status Chance':2, 
             'Fire Rate' : 6.7,
             'Magazine Capacity' : 5,
-            'Reload Speed' : 2.0,
+            'Reload Speed' : 1.2,
             'Crit Chance' : 0,
             'Crit Damage' : 1.5
            }
         })),
         
         new (Stinger = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewRifleModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sentinel", 
@@ -2630,9 +2743,9 @@ function   ($, _, Backbone, Modules, Enemies, Auras) {
         })),
         
         new (Sweeper = Weapon.extend({
-           initialize:function(){
+           initialize:function(loadType){
              this.set('modules', Modules.getNewShotgunModCollection());
-             this.constructor.__super__.initialize.apply(this);
+             this.constructor.__super__.initialize.apply(this, [loadType]);
            },
            defaults:{
             weaponType:"sentinel", 

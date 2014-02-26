@@ -363,7 +363,22 @@ function   ($, _, Backbone) {
             baseCost:3
         }
     });
+    
+    //
+    // Special Rifle mods
+    //
 
+    Firestorm = Module.extend({
+       initialize:function(){
+        },
+        defaults:{
+            name:"Firestorm", 
+            types:{'Blast Radius':6}, 
+            maxRanks:4, 
+            currentRank:4,
+            baseCost:5
+        }
+    });
     
     //
     // Pistol mods
@@ -533,7 +548,7 @@ function   ($, _, Backbone) {
             types:{'Toxic':15}, 
             maxRanks:6, 
             currentRank:6,
-            baseCost:1
+            baseCost:5
         }
     });
     
@@ -974,6 +989,35 @@ function   ($, _, Backbone) {
                         new Seeker({currentRank:0})
                     ]);
                break;
+            case 'castanas':
+               mods = new ModuleCollection([
+                        new HornetStrike(), 
+                        new BarrelDiffusion(), 
+                        new LethalTorrent(), 
+                        new NoReturn({currentRank:0}), 
+                        new ConcussionRounds({currentRank:0}), 
+                        new RazorShot({currentRank:0}), 
+                        new Gunslinger({currentRank:0}), 
+                        new Quickdraw(), 
+                        new SlipMagazine({currentRank:0}), 
+                        new StunningSpeed({currentRank:0}), 
+                        new HeatedCharge(), 
+                        new DeepFreeze({currentRank:0}), 
+                        new Convulsion(),
+                        new PathogenRounds(),
+                        new PistolPestilence({currentRank:0}),
+                        new Expel(),
+                        new IceStorm({currentRank:0}),
+                        new PistolGambit({currentRank:0}),
+                        new TargetCracker({currentRank:0}),
+                        new SureShot({currentRank:0}),
+                        new HollowPoint({currentRank:0}),
+                        new MagnumForce({currentRank:0}),
+                        new TaintedClip({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new Seeker({currentRank:0})
+                    ]);
+               break;
             case 'cestra':
                mods = new ModuleCollection([
                         new HornetStrike(), 
@@ -1067,6 +1111,35 @@ function   ($, _, Backbone) {
     getNewRifleModCollection = function(buildType){
         var mods = {};
         switch(buildType){
+            case 'burst':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit({currentRank:0}), 
+                        new SawtoothClip({currentRank:0}), 
+                        new Rupture({currentRank:0}), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(), 
+                        new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
+                        new Wildfire(),
+                        new HammerShot({currentRank:0}),
+                        new Bane(),
+                        new RifleAptitude({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0})
+                     ]);
+                break;
             case 'crit':
                 mods = new ModuleCollection([
                         new Serration(), 
@@ -1183,6 +1256,66 @@ function   ($, _, Backbone) {
                         new AmmoMutator({currentRank:0})
                      ]);
                 break;
+            case 'ignis':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger({currentRank:0}),
+                        new PiercingHit({currentRank:0}), 
+                        new SawtoothClip({currentRank:0}), 
+                        new Rupture({currentRank:0}), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(),
+                        new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot({currentRank:0}),
+                        new Bane(),
+                        new RifleAptitude({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber(),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new Firestorm({currentRank:0})
+                     ]);
+                break;
+            case 'ogris':
+                mods = new ModuleCollection([
+                        new Serration(), 
+                        new SplitChamber(), 
+                        new SpeedTrigger(),
+                        new PiercingHit({currentRank:0}), 
+                        new SawtoothClip({currentRank:0}), 
+                        new Rupture({currentRank:0}), 
+                        new Shred({currentRank:0}), 
+                        new FastHands({currentRank:0}), 
+                        new MagazineWarp({currentRank:0}), 
+                        new PointStrike({currentRank:0}), 
+                        new VitalSense({currentRank:0}), 
+                        new Hellfire(), 
+                        new CryoRounds(), 
+                        new Stormbringer(), 
+                        new InfectedClip(),
+                        new MalignantForce({currentRank:0}),
+                        new Wildfire({currentRank:0}),
+                        new HammerShot({currentRank:0}),
+                        new Bane(),
+                        new RifleAptitude({currentRank:0}),
+                        new CriticalDelay({currentRank:0}),
+                        new HeavyCaliber({currentRank:0}),
+                        new TaintedMag({currentRank:0}),
+                        new VilePrecision({currentRank:0}),
+                        new AmmoMutator({currentRank:0}),
+                        new Firestorm({currentRank:0})
+                    ]);
+               break;
             case 'torid':
                 mods = new ModuleCollection([
                         new Serration(), 

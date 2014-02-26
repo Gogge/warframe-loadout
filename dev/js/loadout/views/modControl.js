@@ -24,7 +24,7 @@ function   ($, _, Backbone, Modules) {
         default: function(e){
             e.preventDefault();
             this.options.weaponCategory.each(function(weapon){
-                weapon.initialize();
+                weapon.initialize("resetMods");
             });
             this.options.weaponCategoryView.quickRender();
         },
